@@ -10,6 +10,7 @@ inf_2.py
 *.SAFE
 playground.py
 model/
+*.gpkg
 
 # images
 *.tif
