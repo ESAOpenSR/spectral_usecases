@@ -106,12 +106,52 @@ def plot_dnbr_histograms_with_threshold(lr_path, sr_path, lr_mask, sr_mask, bins
     return thr
 
 
-def write_detections(dnbr_path, out_path, threshold):
-    """Threshold a dNBR raster and write binary detections to disk."""
+def write_detections(
+    dnbr_path, out_path, threshold, reference_path=None, resampling=Resampling.bilinear
+):
+    """
+    Threshold a dNBR raster and write binary detections to disk.
+
+    If ``reference_path`` is provided, the dNBR is first resampled onto that
+    grid (e.g., upsampling LR dNBR to the SR grid) before thresholding. This
+    ensures that detections are generated on the target grid rather than being
+    interpolated afterwards. Bilinear resampling is used by default for this
+    upsampling step so LR/SR performance is more directly comparable.
+    """
     with rasterio.open(dnbr_path) as src:
         arr = src.read(1).astype("float32")
         meta = src.meta.copy()
         nod = src.nodata if src.nodata is not None else -9999.0
+
+    # Optionally resample the source dNBR onto a reference grid before
+    # thresholding, so that LR detections are generated on the SR grid.
+    if reference_path is not None:
+        with rasterio.open(reference_path) as ref:
+            dst_shape = (ref.height, ref.width)
+            dst_transform = ref.transform
+            dst_crs = ref.crs
+
+        arr_resampled = np.full(dst_shape, nod, dtype="float32")
+
+        reproject(
+            source=arr,
+            destination=arr_resampled,
+            src_transform=meta["transform"],
+            src_crs=meta["crs"],
+            dst_transform=dst_transform,
+            dst_crs=dst_crs,
+            resampling=resampling,
+            src_nodata=nod,
+            dst_nodata=nod,
+        )
+
+        arr = arr_resampled
+        meta.update({
+            "transform": dst_transform,
+            "crs": dst_crs,
+            "height": dst_shape[0],
+            "width": dst_shape[1],
+        })
 
     det = np.zeros_like(arr, dtype="uint8")
     valid = (arr != nod) & np.isfinite(arr)
@@ -144,5 +184,11 @@ if __name__ == "__main__":
     )
 
     # --- write detections using that threshold ---
-    write_detections(lr_dnbr, os.path.join(base, "lr_detections.tif"), threshold)
+    write_detections(
+        lr_dnbr,
+        os.path.join(base, "lr_detections.tif"),
+        threshold,
+        reference_path=sr_dnbr,  # upsample LR first so detection happens on SR grid
+        resampling=Resampling.bilinear,  # explicit bilinear resampling for upsampling
+    )
     write_detections(sr_dnbr, os.path.join(base, "sr_detections.tif"), threshold)
