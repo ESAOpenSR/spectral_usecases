@@ -197,7 +197,7 @@ def compute_metrics(
             "accuracy": accuracy,
         }
 
-    confusion_LR = _binary_confusion(det_LR_lr, gt_lr)
+    confusion_LR = _binary_confusion(det_LR, gt_lr)
     confusion_SR = _binary_confusion(det_SR, gt_sr)
 
     return {
