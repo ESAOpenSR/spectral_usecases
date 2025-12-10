@@ -170,6 +170,12 @@ def compute_metrics(
 
     # --- 5. Classification metrics (binary confusion matrix) ---
     def _binary_confusion(det_mask, gt_mask):
+        if det_mask.shape != gt_mask.shape:
+            raise ValueError(
+                "Detection and ground-truth masks must share the same shape "
+                f"(got {det_mask.shape} vs {gt_mask.shape})."
+            )
+
         tp = int(np.sum((det_mask == 1) & (gt_mask == 1)))
         tn = int(np.sum((det_mask == 0) & (gt_mask == 0)))
         fp = int(np.sum((det_mask == 1) & (gt_mask == 0)))
@@ -197,7 +203,9 @@ def compute_metrics(
             "accuracy": accuracy,
         }
 
-    confusion_LR = _binary_confusion(det_LR, gt_lr)
+    # Use detection masks that are aligned to the respective GT grids to avoid
+    # shape mismatches when computing confusion matrices.
+    confusion_LR = _binary_confusion(det_LR_lr, gt_lr)
     confusion_SR = _binary_confusion(det_SR, gt_sr)
 
     return {
