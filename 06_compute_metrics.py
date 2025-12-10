@@ -48,6 +48,39 @@ def compute_metrics(
     det_LR = (det_LR_raw > 0).astype("uint8")
     det_SR = (det_SR_raw > 0).astype("uint8")
 
+    # Align detection masks to their respective dNBR grids for fair comparisons
+    if (
+        det_LR.shape != lr.shape
+        or lr_det_src.transform != lr_dnbr_src.transform
+        or lr_det_src.crs != lr_dnbr_src.crs
+    ):
+        det_LR_lr = _reproject_mask_to_target(
+            det_LR,
+            src_transform=lr_det_src.transform,
+            src_crs=lr_det_src.crs,
+            dst_shape=lr.shape,
+            dst_transform=lr_dnbr_src.transform,
+            dst_crs=lr_dnbr_src.crs,
+        )
+    else:
+        det_LR_lr = det_LR.copy()
+
+    if (
+        det_SR.shape != sr.shape
+        or sr_det_src.transform != sr_dnbr_src.transform
+        or sr_det_src.crs != sr_dnbr_src.crs
+    ):
+        det_SR = _reproject_mask_to_target(
+            det_SR,
+            src_transform=sr_det_src.transform,
+            src_crs=sr_det_src.crs,
+            dst_shape=sr.shape,
+            dst_transform=sr_dnbr_src.transform,
+            dst_crs=sr_dnbr_src.crs,
+        )
+    else:
+        det_SR = det_SR.copy()
+
     # --- Reproject GT to LR grid (for LR spectral stats) ---
     if (gt.shape != lr.shape or
         gt_src.transform != lr_dnbr_src.transform or
@@ -79,19 +112,21 @@ def compute_metrics(
         gt_sr = gt.copy()
 
     # --- Upsample LR detections to SR grid (NN) ---
-    if (det_LR.shape != det_SR.shape or
-        lr_det_src.transform != sr_det_src.transform or
-        lr_det_src.crs != sr_det_src.crs):
+    if (
+        det_LR_lr.shape != det_SR.shape
+        or lr_dnbr_src.transform != sr_det_src.transform
+        or lr_dnbr_src.crs != sr_det_src.crs
+    ):
         det_LR_sr = _reproject_mask_to_target(
-            det_LR,
-            src_transform=lr_det_src.transform,
-            src_crs=lr_det_src.crs,
+            det_LR_lr,
+            src_transform=lr_dnbr_src.transform,
+            src_crs=lr_dnbr_src.crs,
             dst_shape=det_SR.shape,
             dst_transform=sr_det_src.transform,
             dst_crs=sr_det_src.crs,
         )
     else:
-        det_LR_sr = det_LR.copy()
+        det_LR_sr = det_LR_lr.copy()
 
     # Close datasets
     lr_dnbr_src.close()
