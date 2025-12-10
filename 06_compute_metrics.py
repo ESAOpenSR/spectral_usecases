@@ -50,7 +50,7 @@ def compute_metrics(
     det_LR = (det_LR_raw > 0).astype("uint8")
     det_SR = (det_SR_raw > 0).astype("uint8")
 
-    # --- Reproject GT to LR grid (for LR spectral stats) ---
+    # --- Reproject GT to LR/SR grids for spectral stats ---
     if (gt.shape != lr.shape or gt_src.transform != lr_mndwi_src.transform or gt_src.crs != lr_mndwi_src.crs):
         gt_lr = _reproject_mask_to_target(
             gt,
@@ -63,7 +63,6 @@ def compute_metrics(
     else:
         gt_lr = gt.copy()
 
-    # --- Reproject GT to SR grid (for SR spectral stats + edge metrics) ---
     if (gt.shape != sr.shape or gt_src.transform != sr_mndwi_src.transform or gt_src.crs != sr_mndwi_src.crs):
         gt_sr = _reproject_mask_to_target(
             gt,
@@ -75,6 +74,31 @@ def compute_metrics(
         )
     else:
         gt_sr = gt.copy()
+
+    # --- Reproject GT to detection grids for confusion metrics ---
+    if (gt.shape != det_LR.shape or gt_src.transform != lr_det_src.transform or gt_src.crs != lr_det_src.crs):
+        gt_lr_det = _reproject_mask_to_target(
+            gt,
+            src_transform=gt_src.transform,
+            src_crs=gt_src.crs,
+            dst_shape=det_LR.shape,
+            dst_transform=lr_det_src.transform,
+            dst_crs=lr_det_src.crs,
+        )
+    else:
+        gt_lr_det = gt.copy()
+
+    if (gt.shape != det_SR.shape or gt_src.transform != sr_det_src.transform or gt_src.crs != sr_det_src.crs):
+        gt_sr_det = _reproject_mask_to_target(
+            gt,
+            src_transform=gt_src.transform,
+            src_crs=gt_src.crs,
+            dst_shape=det_SR.shape,
+            dst_transform=sr_det_src.transform,
+            dst_crs=sr_det_src.crs,
+        )
+    else:
+        gt_sr_det = gt.copy()
 
     # --- Upsample LR detections to SR grid (NN) ---
     if (det_LR.shape != det_SR.shape or lr_det_src.transform != sr_det_src.transform or lr_det_src.crs != sr_det_src.crs):
@@ -129,6 +153,36 @@ def compute_metrics(
     else:
         edge_gain = (SR_edge_detected - LR_edge_detected) / LR_edge_detected
 
+    def _confusion(pred_mask, gt_mask):
+        pred_bin = pred_mask.astype(np.bool_)
+        gt_bin = gt_mask.astype(np.bool_)
+
+        tp = int(np.nansum(pred_bin & gt_bin))
+        tn = int(np.nansum(~pred_bin & ~gt_bin))
+        fp = int(np.nansum(pred_bin & ~gt_bin))
+        fn = int(np.nansum(~pred_bin & gt_bin))
+
+        precision = tp / (tp + fp) if (tp + fp) > 0 else np.nan
+        recall = tp / (tp + fn) if (tp + fn) > 0 else np.nan
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else np.nan
+        accuracy = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) > 0 else np.nan
+        f1 = (2 * tp) / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else np.nan
+
+        return {
+            "tp": tp,
+            "tn": tn,
+            "fp": fp,
+            "fn": fn,
+            "precision": precision,
+            "recall": recall,
+            "specificity": specificity,
+            "f1": f1,
+            "accuracy": accuracy,
+        }
+
+    confusion_LR = _confusion(det_LR, gt_lr_det)
+    confusion_SR = _confusion(det_SR, gt_sr_det)
+
     return {
         "N_LR": N_LR,
         "N_SR": N_SR,
@@ -139,6 +193,8 @@ def compute_metrics(
         "high_SR": high_SR,
         "high_rel_change": high_rel_change,
         "edge_gain": edge_gain,
+        "confusion_LR": confusion_LR,
+        "confusion_SR": confusion_SR,
     }
 
 
@@ -188,6 +244,16 @@ if __name__ == "__main__":
         writer.writerow(["Median MNDWI", m["median_LR"], m["median_SR"], ""])
         writer.writerow(["High-Conf Fraction", m["high_LR"], m["high_SR"], m["high_rel_change"]])
         writer.writerow(["Edge-Region Gain", "", "", m["edge_gain"]])
+        # Classification metrics
+        writer.writerow(["True Positives", m["confusion_LR"]["tp"], m["confusion_SR"]["tp"], ""])
+        writer.writerow(["True Negatives", m["confusion_LR"]["tn"], m["confusion_SR"]["tn"], ""])
+        writer.writerow(["False Positives", m["confusion_LR"]["fp"], m["confusion_SR"]["fp"], ""])
+        writer.writerow(["False Negatives", m["confusion_LR"]["fn"], m["confusion_SR"]["fn"], ""])
+        writer.writerow(["Precision", m["confusion_LR"]["precision"], m["confusion_SR"]["precision"], ""])
+        writer.writerow(["Recall", m["confusion_LR"]["recall"], m["confusion_SR"]["recall"], ""])
+        writer.writerow(["Specificity", m["confusion_LR"]["specificity"], m["confusion_SR"]["specificity"], ""])
+        writer.writerow(["F1 Score", m["confusion_LR"]["f1"], m["confusion_SR"]["f1"], ""])
+        writer.writerow(["Accuracy", m["confusion_LR"]["accuracy"], m["confusion_SR"]["accuracy"], ""])
 
     print(f"CSV saved to {csv_path}")
 
