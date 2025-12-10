@@ -167,7 +167,7 @@ def write_detections(
     
 
 if __name__ == "__main__":
-    base = "data/products/"
+    base = "data_fire/products/"
 
     lr_dnbr = os.path.join(base, "lr_dnbr.tif")
     sr_dnbr = os.path.join(base, "sr_dnbr.tif")

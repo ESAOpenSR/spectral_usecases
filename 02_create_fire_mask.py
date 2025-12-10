@@ -4,9 +4,9 @@ import geopandas as gpd
 import numpy as np
 
 # --- INPUTS ---
-raster_path = "data/raster_data/lr_after.tif"
-vector_path = "data/vector_data/palisades_fire_extent.gpkg"
-out_path    = "data/raster_data/fire_mask.tif"
+raster_path = "data_fire/raster_data/lr_after.tif"
+vector_path = "data_fire/vector_data/palisades_fire_extent.gpkg"
+out_path    = "data_fire/raster_data/fire_mask.tif"
 
 # --- 1. Read raster (for shape, transform, CRS) ---
 with rasterio.open(raster_path) as src:

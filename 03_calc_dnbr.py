@@ -105,5 +105,5 @@ def compute_dnbr_for_prefix(
 
 
 if __name__ == "__main__":
-    compute_dnbr_for_prefix("lr", in_dir="data/raster_data", out_dir="data/products")
-    compute_dnbr_for_prefix("sr", in_dir="data/raster_data", out_dir="data/products")
+    compute_dnbr_for_prefix("lr", in_dir="data_fire/raster_data", out_dir="data/products")
+    compute_dnbr_for_prefix("sr", in_dir="data_fire/raster_data", out_dir="data/products")

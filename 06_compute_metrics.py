@@ -166,8 +166,8 @@ def print_pretty_table(metrics):
 
 
 if __name__ == "__main__":
-    base_prods = "data/products/"
-    base_data = "data/raster_data/"
+    base_prods = "data_fire/products/"
+    base_data = "data_fire/raster_data/"
 
     m = compute_metrics(
         lr_dnbr_path=base_prods + "lr_dnbr.tif",

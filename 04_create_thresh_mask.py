@@ -76,8 +76,8 @@ def make_valid_land_mask(
 
 
 if __name__ == "__main__":
-    input_tif = "data/raster_data/lr_after.tif"
-    output_tif = "data/products/valid_land_mask.tif"
+    input_tif = "data_fire/raster_data/lr_after.tif"
+    output_tif = "data_fire/products/valid_land_mask.tif"
 
     valid_mask, _, thr = make_valid_land_mask(
         input_tif,

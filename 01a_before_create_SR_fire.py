@@ -73,6 +73,7 @@ def plot_lr(low_resolution):
   ax[1].imshow(torch.clamp(low_resolution[[9, 7, 5]]*2, 0, 1).permute(1,2,0).cpu())
   ax[1].set_title('SWIR/RE - 20m')
   plt.savefig("lr_image.png")
+  plt.close()
 
 # @title
 # Plot LR/SR Comparison
@@ -112,12 +113,12 @@ LATITUDE = 34.07809695137825
 LONGITUDE = -118.59742822220389
 
 # Before
-#START_DATE = "2024-12-01"
-#END_DATE = "2025-12-25"
+START_DATE = "2024-12-01"
+END_DATE = "2025-01-05"
 
 # After
-START_DATE = "2025-01-30"
-END_DATE = "2025-02-15"
+#START_DATE = "2025-01-30"
+#END_DATE = "2025-02-15"
 
 # In the START_DATE & END_DATE range, there can be multiple images. This index is used to select one of them.
 IMAGE_INDEX = 0
@@ -139,9 +140,11 @@ da = cubo.create(
 # Extract tensor from Cubo
 # Prepare the data: Torch float32 - Normed to 0..1 from 0..10_000, bands stacked
 # LR will be of shape: 10, edge_size, edge_size
+IMAGE_INDEX = 6
 original_s2_numpy = (da[IMAGE_INDEX].compute().to_numpy()).astype("float32")
 low_resolution = torch.from_numpy(original_s2_numpy).float().to(device)
 low_resolution = low_resolution / 10_000
+low_resolution = torch.nan_to_num(low_resolution, nan=0.0)
 
 # Have a look at LR image - RGB and 20m bands
 plot_lr(low_resolution)
@@ -174,5 +177,5 @@ if edge_size > 128:
 plot_lr_sr(low_resolution,super_resolution)
 
 # Save both Input and Output as georeferenced GeoTIFs
-save_tensor_as_geotiff(low_resolution, da[IMAGE_INDEX].attrs, out_path="lr.tif", super_resolved=False)
-save_tensor_as_geotiff(super_resolution, da[IMAGE_INDEX].attrs, out_path="sr.tif", super_resolved=True)
+save_tensor_as_geotiff(low_resolution, da[IMAGE_INDEX].attrs, out_path="data_fire/raster_data/lr_before.tif", super_resolved=False)
+save_tensor_as_geotiff(super_resolution, da[IMAGE_INDEX].attrs, out_path="data_fire/raster_data/sr_before.tif", super_resolved=True)
