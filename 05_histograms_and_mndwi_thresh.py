@@ -74,9 +74,9 @@ def otsu_threshold(values, nbins=256):
     return float(bin_mids[np.argmax(sigma_b2)])
 
 
-def plot_dmndwi_histograms_with_threshold(lr_path, sr_path, lr_mask, sr_mask, bins=200, title="dMNDWI distribution"):
+def plot_mndwi_histograms_with_threshold(lr_path, sr_path, lr_mask, sr_mask, bins=200, title="MNDWI distribution"):
     """
-    Plot LR & SR dMNDWI histograms using ONLY pixels where mask==1.
+    Plot LR & SR MNDWI histograms using ONLY pixels where mask==1.
     Mask is automatically NN-resampled to each raster grid if needed.
     """
     lr_vals = load_valid_pixels(lr_path, lr_mask)
@@ -86,12 +86,12 @@ def plot_dmndwi_histograms_with_threshold(lr_path, sr_path, lr_mask, sr_mask, bi
     thr = otsu_threshold(all_vals, nbins=bins)
 
     plt.figure(figsize=(10, 5))
-    plt.hist(lr_vals, bins=bins, alpha=0.5, label="LR dMNDWI", density=True)
-    plt.hist(sr_vals, bins=bins, alpha=0.5, label="SR dMNDWI", density=True)
+    plt.hist(lr_vals, bins=bins, alpha=0.5, label="LR MNDWI", density=True)
+    plt.hist(sr_vals, bins=bins, alpha=0.5, label="SR MNDWI", density=True)
 
     plt.axvline(thr, linestyle="--", linewidth=2, color="red", label=f"Threshold = {thr:.4f}")
 
-    plt.xlabel("dMNDWI value")
+    plt.xlabel("MNDWI value")
     plt.ylabel("Density")
     plt.title(f"{title}\nOtsu threshold = {thr:.4f}")
     plt.legend()
@@ -99,7 +99,7 @@ def plot_dmndwi_histograms_with_threshold(lr_path, sr_path, lr_mask, sr_mask, bi
 
     os.makedirs("metrics/graphs", exist_ok=True)
     plt.tight_layout()
-    plt.savefig("metrics/graphs/dmndwi_histograms.png")
+    plt.savefig("metrics/graphs/mndwi_histograms.png")
     plt.close()
 
     print(f"Otsu threshold (LR+SR combined, masked): {thr:.6f}")
@@ -107,23 +107,23 @@ def plot_dmndwi_histograms_with_threshold(lr_path, sr_path, lr_mask, sr_mask, bi
 
 
 def write_detections(
-    dmndwi_path, out_path, threshold, reference_path=None, resampling=Resampling.bilinear
+    mndwi_path, out_path, threshold, reference_path=None, resampling=Resampling.bilinear
 ):
     """
-    Threshold a dMNDWI raster and write binary detections to disk.
+    Threshold an MNDWI raster and write binary detections to disk.
 
-    If ``reference_path`` is provided, the dMNDWI is first resampled onto that
-    grid (e.g., upsampling LR dMNDWI to the SR grid) before thresholding. This
+    If ``reference_path`` is provided, the MNDWI is first resampled onto that
+    grid (e.g., upsampling LR MNDWI to the SR grid) before thresholding. This
     ensures that detections are generated on the target grid rather than being
     interpolated afterwards. Bilinear resampling is used by default for this
     upsampling step so LR/SR performance is more directly comparable.
     """
-    with rasterio.open(dmndwi_path) as src:
+    with rasterio.open(mndwi_path) as src:
         arr = src.read(1).astype("float32")
         meta = src.meta.copy()
         nod = src.nodata if src.nodata is not None else -9999.0
 
-    # Optionally resample the source dMNDWI onto a reference grid before
+    # Optionally resample the source MNDWI onto a reference grid before
     # thresholding, so that LR detections are generated on the SR grid.
     if reference_path is not None:
         with rasterio.open(reference_path) as ref:
@@ -168,22 +168,22 @@ def write_detections(
 if __name__ == "__main__":
     base = "data_flood/products/"
 
-    lr_dmndwi = os.path.join(base, "lr_dmndwi.tif")
-    sr_dmndwi = os.path.join(base, "sr_dmndwi.tif")
+    lr_mndwi = os.path.join(base, "lr_mndwi.tif")
+    sr_mndwi = os.path.join(base, "sr_mndwi.tif")
 
-    threshold = plot_dmndwi_histograms_with_threshold(
-        lr_path=lr_dmndwi,
-        sr_path=sr_dmndwi,
+    threshold = plot_mndwi_histograms_with_threshold(
+        lr_path=lr_mndwi,
+        sr_path=sr_mndwi,
         lr_mask=None,
         sr_mask=None,
     )
 
     # --- write detections using that threshold ---
     write_detections(
-        lr_dmndwi,
+        lr_mndwi,
         os.path.join(base, "lr_detections.tif"),
         threshold,
-        reference_path=sr_dmndwi,  # upsample LR first so detection happens on SR grid
+        reference_path=sr_mndwi,  # upsample LR first so detection happens on SR grid
         resampling=Resampling.bilinear,  # explicit bilinear resampling for upsampling
     )
-    write_detections(sr_dmndwi, os.path.join(base, "sr_detections.tif"), threshold)
+    write_detections(sr_mndwi, os.path.join(base, "sr_detections.tif"), threshold)

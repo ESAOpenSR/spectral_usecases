@@ -4,7 +4,7 @@ import geopandas as gpd
 import numpy as np
 
 # --- INPUTS ---
-raster_path = "data_flood/raster_data/lr_after.tif"
+raster_path = "data_flood/raster_data/lr.tif"
 vector_path = "data_flood/vector_data/flood_extent.geojson"
 out_path    = "data_flood/raster_data/flood_mask.tif"
 

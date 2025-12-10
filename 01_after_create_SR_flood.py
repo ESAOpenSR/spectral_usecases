@@ -113,7 +113,7 @@ def plot_lr_sr(low_resolution,super_resolution):
 LATITUDE = 39.408933366077136
 LONGITUDE = -0.3750721751326602
 
-# After
+# Acquisition window (single-date analysis)
 START_DATE = "2024-10-29"
 END_DATE = "2024-11-05"
 
@@ -173,5 +173,5 @@ if edge_size > 128:
 plot_lr_sr(low_resolution,super_resolution)
 
 # Save both Input and Output as georeferenced GeoTIFs
-save_tensor_as_geotiff(low_resolution, da[IMAGE_INDEX].attrs, out_path="data_flood/raster_data/lr_after.tif", super_resolved=False)
-save_tensor_as_geotiff(super_resolution, da[IMAGE_INDEX].attrs, out_path="data_flood/raster_data/sr_after.tif", super_resolved=True)
+save_tensor_as_geotiff(low_resolution, da[IMAGE_INDEX].attrs, out_path="data_flood/raster_data/lr.tif", super_resolved=False)
+save_tensor_as_geotiff(super_resolution, da[IMAGE_INDEX].attrs, out_path="data_flood/raster_data/sr.tif", super_resolved=True)

@@ -76,7 +76,7 @@ def make_water_mask(
 
 
 if __name__ == "__main__":
-    input_tif = "data_flood/raster_data/lr_after.tif"
+    input_tif = "data_flood/raster_data/lr.tif"
     output_tif = "data_flood/products/water_mask.tif"
 
     water_mask, _, thr = make_water_mask(

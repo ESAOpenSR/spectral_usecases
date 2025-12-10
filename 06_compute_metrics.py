@@ -23,55 +23,55 @@ def _reproject_mask_to_target(mask_arr, src_transform, src_crs, dst_shape, dst_t
 
 
 def compute_metrics(
-    lr_dmndwi_path,
-    sr_dmndwi_path,
+    lr_mndwi_path,
+    sr_mndwi_path,
     lr_det_path,
     sr_det_path,
     gt_path,
     high_thr=0.2,
 ):
     # --- Open all rasters with geoinfo ---
-    lr_dmndwi_src = rasterio.open(lr_dmndwi_path)
-    sr_dmndwi_src = rasterio.open(sr_dmndwi_path)
+    lr_mndwi_src = rasterio.open(lr_mndwi_path)
+    sr_mndwi_src = rasterio.open(sr_mndwi_path)
     lr_det_src = rasterio.open(lr_det_path)
     sr_det_src = rasterio.open(sr_det_path)
     gt_src = rasterio.open(gt_path)
 
-    lr = lr_dmndwi_src.read(1).astype("float32")
-    sr = sr_dmndwi_src.read(1).astype("float32")
+    lr = lr_mndwi_src.read(1).astype("float32")
+    sr = sr_mndwi_src.read(1).astype("float32")
     det_LR_raw = lr_det_src.read(1).astype("uint8")
     det_SR_raw = sr_det_src.read(1).astype("uint8")
     gt = gt_src.read(1).astype("uint8")
 
-    lr_nod = lr_dmndwi_src.nodata if lr_dmndwi_src.nodata is not None else -9999
-    sr_nod = sr_dmndwi_src.nodata if sr_dmndwi_src.nodata is not None else -9999
+    lr_nod = lr_mndwi_src.nodata if lr_mndwi_src.nodata is not None else -9999
+    sr_nod = sr_mndwi_src.nodata if sr_mndwi_src.nodata is not None else -9999
 
     # Binarise detections (defensive)
     det_LR = (det_LR_raw > 0).astype("uint8")
     det_SR = (det_SR_raw > 0).astype("uint8")
 
     # --- Reproject GT to LR grid (for LR spectral stats) ---
-    if (gt.shape != lr.shape or gt_src.transform != lr_dmndwi_src.transform or gt_src.crs != lr_dmndwi_src.crs):
+    if (gt.shape != lr.shape or gt_src.transform != lr_mndwi_src.transform or gt_src.crs != lr_mndwi_src.crs):
         gt_lr = _reproject_mask_to_target(
             gt,
             src_transform=gt_src.transform,
             src_crs=gt_src.crs,
             dst_shape=lr.shape,
-            dst_transform=lr_dmndwi_src.transform,
-            dst_crs=lr_dmndwi_src.crs,
+            dst_transform=lr_mndwi_src.transform,
+            dst_crs=lr_mndwi_src.crs,
         )
     else:
         gt_lr = gt.copy()
 
     # --- Reproject GT to SR grid (for SR spectral stats + edge metrics) ---
-    if (gt.shape != sr.shape or gt_src.transform != sr_dmndwi_src.transform or gt_src.crs != sr_dmndwi_src.crs):
+    if (gt.shape != sr.shape or gt_src.transform != sr_mndwi_src.transform or gt_src.crs != sr_mndwi_src.crs):
         gt_sr = _reproject_mask_to_target(
             gt,
             src_transform=gt_src.transform,
             src_crs=gt_src.crs,
             dst_shape=sr.shape,
-            dst_transform=sr_dmndwi_src.transform,
-            dst_crs=sr_dmndwi_src.crs,
+            dst_transform=sr_mndwi_src.transform,
+            dst_crs=sr_mndwi_src.crs,
         )
     else:
         gt_sr = gt.copy()
@@ -90,13 +90,13 @@ def compute_metrics(
         det_LR_sr = det_LR.copy()
 
     # Close datasets
-    lr_dmndwi_src.close()
-    sr_dmndwi_src.close()
+    lr_mndwi_src.close()
+    sr_mndwi_src.close()
     lr_det_src.close()
     sr_det_src.close()
     gt_src.close()
 
-    # --- Nodata handling for dMNDWI ---
+    # --- Nodata handling for MNDWI ---
     lr[lr == lr_nod] = np.nan
     sr[sr == sr_nod] = np.nan
 
@@ -106,11 +106,11 @@ def compute_metrics(
 
     rel_change = (float(N_SR) - float(N_LR)) / max(float(N_LR), 1.0)
 
-    # --- 2. Median dMNDWI inside GT flood extent (native grids) ---
+    # --- 2. Median MNDWI inside GT flood extent (native grids) ---
     median_LR = np.nanmedian(lr[gt_lr == 1])
     median_SR = np.nanmedian(sr[gt_sr == 1])
 
-    # --- 3. High-confidence fraction (dMNDWI ≥ high_thr) within GT ---
+    # --- 3. High-confidence fraction (MNDWI ≥ high_thr) within GT ---
     high_LR = np.nanmean((lr[gt_lr == 1] >= high_thr).astype("float32"))
     high_SR = np.nanmean((sr[gt_sr == 1] >= high_thr).astype("float32"))
     high_rel_change = (high_SR - high_LR) / max(high_LR, 1e-9)
@@ -149,7 +149,7 @@ def print_pretty_table(metrics):
     print("-" * 70)
 
     print(f"{'Detected Pixels':<25} {metrics['N_LR']:>15,.0f} {metrics['N_SR']:>15,.0f} {metrics['rel_change']*100:>14.2f}%")
-    print(f"{'Median dMNDWI':<25} {metrics['median_LR']:>15.4f} {metrics['median_SR']:>15.4f} {'--':>15}")
+    print(f"{'Median MNDWI':<25} {metrics['median_LR']:>15.4f} {metrics['median_SR']:>15.4f} {'--':>15}")
     print(
         f"{'High-Conf. Fraction':<25} "
         f"{metrics['high_LR']:>15.4f} "
@@ -166,8 +166,8 @@ if __name__ == "__main__":
     base_data = "data_flood/raster_data/"
 
     m = compute_metrics(
-        lr_dmndwi_path=base_prods + "lr_dmndwi.tif",
-        sr_dmndwi_path=base_prods + "sr_dmndwi.tif",
+        lr_mndwi_path=base_prods + "lr_mndwi.tif",
+        sr_mndwi_path=base_prods + "sr_mndwi.tif",
         lr_det_path=base_prods + "lr_detections.tif",
         sr_det_path=base_prods + "sr_detections.tif",
         gt_path=base_data + "flood_mask.tif",
@@ -185,7 +185,7 @@ if __name__ == "__main__":
         writer.writerow(["Metric", "LR", "SR", "Relative Change"])
 
         writer.writerow(["Detected Pixels", m["N_LR"], m["N_SR"], m["rel_change"]])
-        writer.writerow(["Median dMNDWI", m["median_LR"], m["median_SR"], ""])
+        writer.writerow(["Median MNDWI", m["median_LR"], m["median_SR"], ""])
         writer.writerow(["High-Conf Fraction", m["high_LR"], m["high_SR"], m["high_rel_change"]])
         writer.writerow(["Edge-Region Gain", "", "", m["edge_gain"]])
 
