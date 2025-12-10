@@ -133,6 +133,38 @@ def compute_metrics(
     else:
         edge_gain = (SR_edge_detected - LR_edge_detected) / LR_edge_detected
 
+    # --- 5. Classification metrics (binary confusion matrix) ---
+    def _binary_confusion(det_mask, gt_mask):
+        tp = int(np.sum((det_mask == 1) & (gt_mask == 1)))
+        tn = int(np.sum((det_mask == 0) & (gt_mask == 0)))
+        fp = int(np.sum((det_mask == 1) & (gt_mask == 0)))
+        fn = int(np.sum((det_mask == 0) & (gt_mask == 1)))
+
+        precision = tp / (tp + fp) if (tp + fp) > 0 else np.nan
+        recall = tp / (tp + fn) if (tp + fn) > 0 else np.nan
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else np.nan
+        f1 = (
+            2 * precision * recall / (precision + recall)
+            if (precision + recall) > 0
+            else np.nan
+        )
+        accuracy = (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) > 0 else np.nan
+
+        return {
+            "tp": tp,
+            "tn": tn,
+            "fp": fp,
+            "fn": fn,
+            "precision": precision,
+            "recall": recall,
+            "specificity": specificity,
+            "f1": f1,
+            "accuracy": accuracy,
+        }
+
+    confusion_LR = _binary_confusion(det_LR, gt_lr)
+    confusion_SR = _binary_confusion(det_SR, gt_sr)
+
     return {
         "N_LR": N_LR,
         "N_SR": N_SR,
@@ -143,6 +175,8 @@ def compute_metrics(
         "high_SR": high_SR,
         "high_rel_change": high_rel_change,
         "edge_gain": edge_gain,
+        "confusion_LR": confusion_LR,
+        "confusion_SR": confusion_SR,
     }
 
 
@@ -193,5 +227,16 @@ if __name__ == "__main__":
         writer.writerow(["Median dNBR", m["median_LR"], m["median_SR"], ""])
         writer.writerow(["High-Conf Fraction", m["high_LR"], m["high_SR"], m["high_rel_change"]])
         writer.writerow(["Edge-Region Gain", "", "", m["edge_gain"]])
+
+        # Classification metrics
+        writer.writerow(["True Positives", m["confusion_LR"]["tp"], m["confusion_SR"]["tp"], ""])
+        writer.writerow(["True Negatives", m["confusion_LR"]["tn"], m["confusion_SR"]["tn"], ""])
+        writer.writerow(["False Positives", m["confusion_LR"]["fp"], m["confusion_SR"]["fp"], ""])
+        writer.writerow(["False Negatives", m["confusion_LR"]["fn"], m["confusion_SR"]["fn"], ""])
+        writer.writerow(["Precision", m["confusion_LR"]["precision"], m["confusion_SR"]["precision"], ""])
+        writer.writerow(["Recall", m["confusion_LR"]["recall"], m["confusion_SR"]["recall"], ""])
+        writer.writerow(["Specificity", m["confusion_LR"]["specificity"], m["confusion_SR"]["specificity"], ""])
+        writer.writerow(["F1 Score", m["confusion_LR"]["f1"], m["confusion_SR"]["f1"], ""])
+        writer.writerow(["Accuracy", m["confusion_LR"]["accuracy"], m["confusion_SR"]["accuracy"], ""])
 
     print(f"CSV saved to {csv_path}")
