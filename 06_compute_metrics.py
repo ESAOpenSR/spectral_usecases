@@ -1,12 +1,13 @@
+import os
+import csv
 import numpy as np
 import rasterio
 from scipy.ndimage import binary_dilation, binary_erosion
 from rasterio.warp import reproject
 from rasterio.enums import Resampling
-import os,csv
 
-def _reproject_mask_to_target(mask_arr, src_transform, src_crs,
-                              dst_shape, dst_transform, dst_crs):
+
+def _reproject_mask_to_target(mask_arr, src_transform, src_crs, dst_shape, dst_transform, dst_crs):
     """Nearest-neighbour reproject/resample of a mask to a target grid."""
     dst = np.zeros(dst_shape, dtype=mask_arr.dtype)
     reproject(
@@ -20,68 +21,63 @@ def _reproject_mask_to_target(mask_arr, src_transform, src_crs,
     )
     return dst
 
+
 def compute_metrics(
-    lr_dnbr_path,
-    sr_dnbr_path,
+    lr_dmndwi_path,
+    sr_dmndwi_path,
     lr_det_path,
     sr_det_path,
     gt_path,
-    high_thr=0.5,
+    high_thr=0.2,
 ):
     # --- Open all rasters with geoinfo ---
-    lr_dnbr_src = rasterio.open(lr_dnbr_path)
-    sr_dnbr_src = rasterio.open(sr_dnbr_path)
-    lr_det_src  = rasterio.open(lr_det_path)
-    sr_det_src  = rasterio.open(sr_det_path)
-    gt_src      = rasterio.open(gt_path)
+    lr_dmndwi_src = rasterio.open(lr_dmndwi_path)
+    sr_dmndwi_src = rasterio.open(sr_dmndwi_path)
+    lr_det_src = rasterio.open(lr_det_path)
+    sr_det_src = rasterio.open(sr_det_path)
+    gt_src = rasterio.open(gt_path)
 
-    lr = lr_dnbr_src.read(1).astype("float32")
-    sr = sr_dnbr_src.read(1).astype("float32")
+    lr = lr_dmndwi_src.read(1).astype("float32")
+    sr = sr_dmndwi_src.read(1).astype("float32")
     det_LR_raw = lr_det_src.read(1).astype("uint8")
     det_SR_raw = sr_det_src.read(1).astype("uint8")
     gt = gt_src.read(1).astype("uint8")
 
-    lr_nod = lr_dnbr_src.nodata if lr_dnbr_src.nodata is not None else -9999
-    sr_nod = sr_dnbr_src.nodata if sr_dnbr_src.nodata is not None else -9999
+    lr_nod = lr_dmndwi_src.nodata if lr_dmndwi_src.nodata is not None else -9999
+    sr_nod = sr_dmndwi_src.nodata if sr_dmndwi_src.nodata is not None else -9999
 
     # Binarise detections (defensive)
     det_LR = (det_LR_raw > 0).astype("uint8")
     det_SR = (det_SR_raw > 0).astype("uint8")
 
     # --- Reproject GT to LR grid (for LR spectral stats) ---
-    if (gt.shape != lr.shape or
-        gt_src.transform != lr_dnbr_src.transform or
-        gt_src.crs != lr_dnbr_src.crs):
+    if (gt.shape != lr.shape or gt_src.transform != lr_dmndwi_src.transform or gt_src.crs != lr_dmndwi_src.crs):
         gt_lr = _reproject_mask_to_target(
             gt,
             src_transform=gt_src.transform,
             src_crs=gt_src.crs,
             dst_shape=lr.shape,
-            dst_transform=lr_dnbr_src.transform,
-            dst_crs=lr_dnbr_src.crs,
+            dst_transform=lr_dmndwi_src.transform,
+            dst_crs=lr_dmndwi_src.crs,
         )
     else:
         gt_lr = gt.copy()
 
     # --- Reproject GT to SR grid (for SR spectral stats + edge metrics) ---
-    if (gt.shape != sr.shape or
-        gt_src.transform != sr_dnbr_src.transform or
-        gt_src.crs != sr_dnbr_src.crs):
+    if (gt.shape != sr.shape or gt_src.transform != sr_dmndwi_src.transform or gt_src.crs != sr_dmndwi_src.crs):
         gt_sr = _reproject_mask_to_target(
             gt,
             src_transform=gt_src.transform,
             src_crs=gt_src.crs,
             dst_shape=sr.shape,
-            dst_transform=sr_dnbr_src.transform,
-            dst_crs=sr_dnbr_src.crs,
+            dst_transform=sr_dmndwi_src.transform,
+            dst_crs=sr_dmndwi_src.crs,
         )
     else:
         gt_sr = gt.copy()
 
     # --- Upsample LR detections to SR grid (NN) ---
-    if (det_LR.shape != det_SR.shape or
-        lr_det_src.transform != sr_det_src.transform or
-        lr_det_src.crs != sr_det_src.crs):
+    if (det_LR.shape != det_SR.shape or lr_det_src.transform != sr_det_src.transform or lr_det_src.crs != sr_det_src.crs):
         det_LR_sr = _reproject_mask_to_target(
             det_LR,
             src_transform=lr_det_src.transform,
@@ -94,13 +90,13 @@ def compute_metrics(
         det_LR_sr = det_LR.copy()
 
     # Close datasets
-    lr_dnbr_src.close()
-    sr_dnbr_src.close()
+    lr_dmndwi_src.close()
+    sr_dmndwi_src.close()
     lr_det_src.close()
     sr_det_src.close()
     gt_src.close()
 
-    # --- Nodata handling for dNBR ---
+    # --- Nodata handling for dMNDWI ---
     lr[lr == lr_nod] = np.nan
     sr[sr == sr_nod] = np.nan
 
@@ -110,11 +106,11 @@ def compute_metrics(
 
     rel_change = (float(N_SR) - float(N_LR)) / max(float(N_LR), 1.0)
 
-    # --- 2. Median dNBR inside GT burn scar (native grids) ---
+    # --- 2. Median dMNDWI inside GT flood extent (native grids) ---
     median_LR = np.nanmedian(lr[gt_lr == 1])
     median_SR = np.nanmedian(sr[gt_sr == 1])
 
-    # --- 3. High-confidence fraction (dNBR ≥ high_thr) within GT ---
+    # --- 3. High-confidence fraction (dMNDWI ≥ high_thr) within GT ---
     high_LR = np.nanmean((lr[gt_lr == 1] >= high_thr).astype("float32"))
     high_SR = np.nanmean((sr[gt_sr == 1] >= high_thr).astype("float32"))
     high_rel_change = (high_SR - high_LR) / max(high_LR, 1e-9)
@@ -146,52 +142,52 @@ def compute_metrics(
     }
 
 
-
-
 def print_pretty_table(metrics):
     """Metrics dict → nicely formatted console table."""
-    print("\n================ Burn-Scar Metrics ================\n")
+    print("\n================ Flood Metrics ================\n")
     print(f"{'Metric':<25} {'LR':>15} {'SR':>15} {'Δ vs LR':>15}")
     print("-" * 70)
 
     print(f"{'Detected Pixels':<25} {metrics['N_LR']:>15,.0f} {metrics['N_SR']:>15,.0f} {metrics['rel_change']*100:>14.2f}%")
-    print(f"{'Median dNBR':<25} {metrics['median_LR']:>15.4f} {metrics['median_SR']:>15.4f} {'--':>15}")
-    print(f"{'High-Conf. Fraction':<25} "
+    print(f"{'Median dMNDWI':<25} {metrics['median_LR']:>15.4f} {metrics['median_SR']:>15.4f} {'--':>15}")
+    print(
+        f"{'High-Conf. Fraction':<25} "
         f"{metrics['high_LR']:>15.4f} "
         f"{metrics['high_SR']:>15.4f} "
-        f"{metrics['high_rel_change']*100:>14.2f}%")
+        f"{metrics['high_rel_change']*100:>14.2f}%"
+    )
     print(f"{'Edge-Region Gain':<25} {'--':>15} {'--':>15} {metrics['edge_gain']*100:>14.2f}%")
 
-    print("\n===================================================\n")
+    print("\n================================================\n")
 
 
 if __name__ == "__main__":
-    base_prods = "data_fire/products/"
-    base_data = "data_fire/raster_data/"
+    base_prods = "data_flood/products/"
+    base_data = "data_flood/raster_data/"
 
     m = compute_metrics(
-        lr_dnbr_path=base_prods + "lr_dnbr.tif",
-        sr_dnbr_path=base_prods + "sr_dnbr.tif",
+        lr_dmndwi_path=base_prods + "lr_dmndwi.tif",
+        sr_dmndwi_path=base_prods + "sr_dmndwi.tif",
         lr_det_path=base_prods + "lr_detections.tif",
         sr_det_path=base_prods + "sr_detections.tif",
-        gt_path=base_data + "fire_mask.tif",
-        high_thr=0.5,
+        gt_path=base_data + "flood_mask.tif",
+        high_thr=0.2,
     )
 
     print_pretty_table(m)
 
-
     # --- Save metrics to CSV ---
     os.makedirs("metrics", exist_ok=True)
-    csv_path = "metrics/burnscar_metrics.csv"
+    csv_path = "metrics/flood_metrics.csv"
 
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["Metric", "LR", "SR", "Relative Change"])
 
         writer.writerow(["Detected Pixels", m["N_LR"], m["N_SR"], m["rel_change"]])
-        writer.writerow(["Median dNBR", m["median_LR"], m["median_SR"], ""])
+        writer.writerow(["Median dMNDWI", m["median_LR"], m["median_SR"], ""])
         writer.writerow(["High-Conf Fraction", m["high_LR"], m["high_SR"], m["high_rel_change"]])
         writer.writerow(["Edge-Region Gain", "", "", m["edge_gain"]])
 
     print(f"CSV saved to {csv_path}")
+

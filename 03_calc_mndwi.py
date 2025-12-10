@@ -2,24 +2,25 @@ import os
 import numpy as np
 import rasterio
 
-def compute_dnbr_for_prefix(
+
+def compute_dmndwi_for_prefix(
     prefix,
     in_dir=".",
     out_dir=".",
-    nir_band=7,   # B08 (1-based index in rasterio, 1..n)
-    swir_band=10  # B12 (1-based index in rasterio, 1..n)
+    green_band=2,  # B03 (1-based index in rasterio, 1..n)
+    swir_band=9,   # B11 (1-based index in rasterio, 1..n)
 ):
     """
-    Compute NBR_pre, NBR_post and dNBR for multi-band Sentinel-2 stacks.
+    Compute MNDWI_pre, MNDWI_post and dMNDWI for Sentinel-2 stacks.
 
     Expected files in in_dir:
       {prefix}_before.tif -> multiband S2 stack, bands: B02..B12
       {prefix}_after.tif  -> same structure as _before
 
     Outputs in out_dir:
-      {prefix}_nbr_pre.tif
-      {prefix}_nbr_post.tif
-      {prefix}_dnbr.tif
+      {prefix}_mndwi_pre.tif
+      {prefix}_mndwi_post.tif
+      {prefix}_dmndwi.tif
     """
 
     # Path helpers
@@ -32,18 +33,18 @@ def compute_dnbr_for_prefix(
     pre_path  = p_in(f"{prefix}_before.tif")
     post_path = p_in(f"{prefix}_after.tif")
 
-    out_nbr_pre  = p_out(f"{prefix}_nbr_pre.tif")
-    out_nbr_post = p_out(f"{prefix}_nbr_post.tif")
-    out_dnbr     = p_out(f"{prefix}_dnbr.tif")
+    out_mndwi_pre  = p_out(f"{prefix}_mndwi_pre.tif")
+    out_mndwi_post = p_out(f"{prefix}_mndwi_post.tif")
+    out_dmndwi     = p_out(f"{prefix}_dmndwi.tif")
 
     # --- 1. Open inputs ---
     with rasterio.open(pre_path) as src_pre, \
          rasterio.open(post_path) as src_post:
 
-        nir_pre   = src_pre.read(nir_band).astype("float32")
+        green_pre = src_pre.read(green_band).astype("float32")
         swir_pre  = src_pre.read(swir_band).astype("float32")
-        nir_post  = src_post.read(nir_band).astype("float32")
-        swir_post = src_post.read(swir_band).astype("float32")
+        green_post = src_post.read(green_band).astype("float32")
+        swir_post  = src_post.read(swir_band).astype("float32")
 
         meta = src_pre.meta.copy()
         nodata_in = src_pre.nodata
@@ -51,33 +52,33 @@ def compute_dnbr_for_prefix(
             nodata_in = -9999.0  # define a nodata if missing
 
     # --- 2. Valid masks (avoid nodata & division by zero) ---
-    denom_pre  = nir_pre + swir_pre
-    denom_post = nir_post + swir_post
+    denom_pre  = green_pre + swir_pre
+    denom_post = green_post + swir_post
 
     valid_pre = (
-        (nir_pre != nodata_in) &
+        (green_pre != nodata_in) &
         (swir_pre != nodata_in) &
         (denom_pre != 0)
     )
 
     valid_post = (
-        (nir_post != nodata_in) &
+        (green_post != nodata_in) &
         (swir_post != nodata_in) &
         (denom_post != 0)
     )
 
-    # --- 3. Compute NBR_pre and NBR_post ---
-    nbr_pre  = np.full_like(nir_pre, nodata_in, dtype="float32")
-    nbr_post = np.full_like(nir_post, nodata_in, dtype="float32")
+    # --- 3. Compute MNDWI_pre and MNDWI_post ---
+    mndwi_pre  = np.full_like(green_pre, nodata_in, dtype="float32")
+    mndwi_post = np.full_like(green_post, nodata_in, dtype="float32")
 
-    nbr_pre[valid_pre]   = (nir_pre[valid_pre]  - swir_pre[valid_pre])  / denom_pre[valid_pre]
-    nbr_post[valid_post] = (nir_post[valid_post] - swir_post[valid_post]) / denom_post[valid_post]
+    mndwi_pre[valid_pre]   = (green_pre[valid_pre] - swir_pre[valid_pre]) / denom_pre[valid_pre]
+    mndwi_post[valid_post] = (green_post[valid_post] - swir_post[valid_post]) / denom_post[valid_post]
 
-    # --- 4. Compute dNBR (pre - post) where both valid ---
-    valid_dnbr = valid_pre & valid_post
+    # --- 4. Compute dMNDWI (post - pre) where both valid ---
+    valid_dmndwi = valid_pre & valid_post
 
-    dnbr = np.full_like(nir_pre, nodata_in, dtype="float32")
-    dnbr[valid_dnbr] = nbr_pre[valid_dnbr] - nbr_post[valid_dnbr]
+    dmndwi = np.full_like(green_pre, nodata_in, dtype="float32")
+    dmndwi[valid_dmndwi] = mndwi_post[valid_dmndwi] - mndwi_pre[valid_dmndwi]
 
     # --- 5. Write outputs ---
     meta_out = meta.copy()
@@ -89,21 +90,22 @@ def compute_dnbr_for_prefix(
 
     os.makedirs(out_dir, exist_ok=True)
 
-    with rasterio.open(out_nbr_pre, "w", **meta_out) as dst:
-        dst.write(nbr_pre, 1)
+    with rasterio.open(out_mndwi_pre, "w", **meta_out) as dst:
+        dst.write(mndwi_pre, 1)
 
-    with rasterio.open(out_nbr_post, "w", **meta_out) as dst:
-        dst.write(nbr_post, 1)
+    with rasterio.open(out_mndwi_post, "w", **meta_out) as dst:
+        dst.write(mndwi_post, 1)
 
-    with rasterio.open(out_dnbr, "w", **meta_out) as dst:
-        dst.write(dnbr, 1)
+    with rasterio.open(out_dmndwi, "w", **meta_out) as dst:
+        dst.write(dmndwi, 1)
 
     print(f"[{prefix}] wrote:")
-    print(" ", out_nbr_pre)
-    print(" ", out_nbr_post)
-    print(" ", out_dnbr)
+    print(" ", out_mndwi_pre)
+    print(" ", out_mndwi_post)
+    print(" ", out_dmndwi)
 
 
 if __name__ == "__main__":
-    compute_dnbr_for_prefix("lr", in_dir="data_fire/raster_data", out_dir="data/products")
-    compute_dnbr_for_prefix("sr", in_dir="data_fire/raster_data", out_dir="data/products")
+    compute_dmndwi_for_prefix("lr", in_dir="data_flood/raster_data", out_dir="data_flood/products")
+    compute_dmndwi_for_prefix("sr", in_dir="data_flood/raster_data", out_dir="data_flood/products")
+

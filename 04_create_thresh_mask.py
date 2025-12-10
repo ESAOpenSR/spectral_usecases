@@ -1,22 +1,23 @@
 import rasterio
 import numpy as np
 
-def make_valid_land_mask(
+
+def make_water_mask(
     input_tif,
     green_band=2,   # B03 (1-based index)
     swir_band=9,    # B11 (1-based index)
     thr=None,       # If None: Otsu threshold on MNDWI
-    out_tif=None
+    out_tif=None,
 ):
     """
-    Build a VALID LAND mask from a multiband Sentinel-2 TIFF.
+    Build a WATER mask from a multiband Sentinel-2 TIFF.
 
     Mask semantics:
-        1 = valid land / vegetation (use these)
-        0 = invalid (water, urban, shadows, specular)
+        1 = water (flood or standing water)
+        0 = non-water
 
     Internally uses MNDWI (green - swir) / (green + swir)
-    and splits land vs non-land using a threshold.
+    and splits water vs non-water using a threshold.
     """
 
     def otsu_threshold(values, nbins=256):
@@ -58,33 +59,32 @@ def make_valid_land_mask(
     # --- Determine threshold ---
     if thr is None:
         thr = otsu_threshold(mndwi[np.isfinite(mndwi)])
-        print(f"[make_valid_land_mask] Otsu MNDWI threshold = {thr:.4f}")
+        print(f"[make_water_mask] Otsu MNDWI threshold = {thr:.4f}")
 
-    # --- Build VALID LAND mask ---
-    # Here, lower MNDWI = land
-    #       higher MNDWI = water/urban/shadow
-    land_mask = np.zeros_like(green, dtype="uint8")
-    land_mask[(mndwi < thr) & np.isfinite(mndwi)] = 1   # <-- 1 = valid land
+    # --- Build WATER mask ---
+    # Here, higher MNDWI = water
+    water_mask = np.zeros_like(green, dtype="uint8")
+    water_mask[(mndwi >= thr) & np.isfinite(mndwi)] = 1   # <-- 1 = water
 
     # --- Save output optionally ---
     if out_tif is not None:
         meta.update({"dtype": "uint8", "count": 1, "nodata": 0})
         with rasterio.open(out_tif, "w", **meta) as dst:
-            dst.write(land_mask, 1)
+            dst.write(water_mask, 1)
 
-    return land_mask, mndwi, thr
+    return water_mask, mndwi, thr
 
 
 if __name__ == "__main__":
-    input_tif = "data_fire/raster_data/lr_after.tif"
-    output_tif = "data_fire/products/valid_land_mask.tif"
+    input_tif = "data_flood/raster_data/lr_after.tif"
+    output_tif = "data_flood/products/water_mask.tif"
 
-    valid_mask, _, thr = make_valid_land_mask(
+    water_mask, _, thr = make_water_mask(
         input_tif,
         green_band=2,
         swir_band=9,
-        thr=-0.05,      # optional manual threshold
+        thr=None,      # optional manual threshold
         out_tif=output_tif
     )
 
-    print("Valid land mask saved to:", output_tif)
+    print("Water mask saved to:", output_tif)
