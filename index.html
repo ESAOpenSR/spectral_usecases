@@ -128,8 +128,18 @@
       border-color: rgba(255,255,255,0.22);
       box-shadow: 0 18px 56px rgba(0,0,0,0.36);
     }
+    @media (max-width: 820px) {
+      .wrap { padding: 48px 18px 64px; }
+      h1 { font-size: 30px; }
+      p { font-size: 15px; }
+      .card { padding: 24px; }
+    }
+
     @media (max-width: 640px) {
-      h1 { font-size: 28px; }
+      h1 { font-size: 26px; }
+      .wrap { padding: 40px 16px 56px; }
+      .grid, .teasers { gap: 14px; }
+      .btns { grid-template-columns: 1fr; }
     }
   </style>
 </head>
