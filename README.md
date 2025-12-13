@@ -3,7 +3,13 @@
 
 # Spectral Use Case Validation - Flood 🌊 and Fire 🔥
 
-This repository supports the paper’s LR vs. SR spectral use case validation, comparing native Sentinel-2 imagery against physics-constrained latent diffusion SR outputs for water (flood) and burn-severity (fire) detection. It provides reproducible code, data download helpers, and links to the accompanying walkthroughs on the project site (https://usecases.opensr.eu).
+This repository supports the paper’s LR vs. SR spectral use case validation, comparing native Sentinel-2 imagery against physics-constrained latent diffusion SR outputs for water (flood) and burn-severity (fire) detection. It provides reproducible code, data download helpers, and links to the accompanying walkthroughs on the project site [usecases.opensr.eu](https://usecases.opensr.eu).
+
+![Map Example](https://github.com/ESAOpenSR/spectral_usecases/blob/15370fdf93cd2965b76abd2bec848cede6da156a/resources/flood_map_example.png)
+
+
+
+
 
 ## Run the LR vs SR validations locally
 The steps below mirror the instructions shown in the notebooks; follow them once to enable both workflows.
@@ -27,24 +33,24 @@ The workflows are organized by hazard; each step is a numbered script. Run them 
 ### Flood (Valencia 2024)
 ```bash
 cd flood_workflow
-python 01_after_create_SR_flood.py      # visualize SR vs baseline inputs
-python 02_create_flood_mask.py          # compute spectral mask
-python 03_calc_mndwi.py                 # derive MNDWI index
-python 04_create_thresh_mask.py         # apply thresholds
-python 05_histograms_and_mndwi_thresh.py# explore histogram-based cuts
-python 06_compute_metrics.py            # evaluate detection metrics
+python 01_after_create_SR_flood.py       # visualize SR vs baseline inputs
+python 02_create_flood_mask.py           # compute spectral mask
+python 03_calc_mndwi.py                  # derive MNDWI index
+python 04_create_thresh_mask.py          # apply thresholds
+python 05_histograms_and_mndwi_thresh.py # explore histogram-based cuts
+python 06_compute_metrics.py             # evaluate detection metrics
 ```
 
 ### Fire (Palisades 2025)
 ```bash
 cd fire_workflow
-python 01a_before_create_SR_fire.py     # visualize native inputs
-python 01b_after_create_SR_fire.py      # visualize SR outputs
-python 02_create_fire_mask.py           # compute spectral mask
-python 03_calc_dnbr.py                  # derive dNBR index
-python 04_create_thresh_mask.py         # apply thresholds
-python 05_histograms_and_dnbr_thresh.py # explore histogram-based cuts
-python 06_compute_metrics.py            # evaluate detection metrics
+python 01a_before_create_SR_fire.py      # visualize native inputs
+python 01b_after_create_SR_fire.py       # visualize SR outputs
+python 02_create_fire_mask.py            # compute spectral mask
+python 03_calc_dnbr.py                   # derive dNBR index
+python 04_create_thresh_mask.py          # apply thresholds
+python 05_histograms_and_dnbr_thresh.py  # explore histogram-based cuts
+python 06_compute_metrics.py             # evaluate detection metrics
 ```
 
 ## Notes
