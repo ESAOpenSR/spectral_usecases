@@ -27,10 +27,21 @@
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      align-items: center;
       gap: 8px;
       z-index: 1000;
+      background: rgba(10, 12, 18, 0.6);
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.32);
+      backdrop-filter: blur(8px);
+    }
+    .nav .links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .nav a {
       background: rgba(10, 12, 18, 0.9);
@@ -46,6 +57,29 @@
     }
     .nav a:hover,
     .nav a:focus-visible {
+      transform: translateY(-1px);
+      background: rgba(17, 24, 39, 0.95);
+      border-color: rgba(232,236,245,0.35);
+      outline: none;
+    }
+
+    .menu-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(10, 12, 18, 0.92);
+      color: #e8ecf5;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: 14px/1.25 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+    .menu-toggle:hover,
+    .menu-toggle:focus-visible {
       transform: translateY(-1px);
       background: rgba(17, 24, 39, 0.95);
       border-color: rgba(232,236,245,0.35);
@@ -103,12 +137,28 @@
     }
 
     @media (max-width: 720px) {
+      .nav {
+        left: 14px;
+        right: 14px;
+        transform: none;
+        justify-content: flex-end;
+        padding: 10px;
+        gap: 10px;
+      }
+      .nav .links {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+      }
+      .nav .links.open { display: flex; }
       .nav a {
-        padding: 9px 12px;
+        padding: 10px 12px;
         font-size: 13px;
-        flex: 1 1 calc(50% - 8px);
+        width: 100%;
         text-align: center;
       }
+      .menu-toggle { display: inline-flex; }
       .panel {
         min-width: 170px;
         font-size: 13px;
@@ -120,9 +170,12 @@
 </head>
 <body>
   <div class="nav">
-    <a href="../index.html">Home</a>
-    <a href="../flood/index.html">Flood map</a>
-    <a href="https://github.com/ESAOpenSR/spectral_usecases" target="_blank" rel="noopener noreferrer">GitHub Repo</a>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="navLinks">☰ Menu</button>
+    <div id="navLinks" class="links">
+      <a href="../index.html">Home</a>
+      <a href="../flood/index.html">Flood map</a>
+      <a href="https://github.com/ESAOpenSR/spectral_usecases" target="_blank" rel="noopener noreferrer">GitHub Repo</a>
+    </div>
   </div>
   <div id="map"></div>
 
@@ -134,6 +187,22 @@
   ></script>
 
   <script>
+    // --- Navigation (mobile burger) ---
+    const navLinks = document.getElementById("navLinks");
+    const menuToggle = document.querySelector(".menu-toggle");
+    if (navLinks && menuToggle) {
+      const toggleMenu = () => {
+        const isOpen = navLinks.classList.toggle("open");
+        menuToggle.setAttribute("aria-expanded", isOpen.toString());
+      };
+      menuToggle.addEventListener("click", toggleMenu);
+      navLinks.querySelectorAll("a").forEach((link) =>
+        link.addEventListener("click", () => {
+          if (navLinks.classList.contains("open")) toggleMenu();
+        })
+      );
+    }
+
     // --- Map ---
     const map = L.map("map", { zoomControl: true });
 
