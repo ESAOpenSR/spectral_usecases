@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OpenSR — SR vs LR Detections</title>
+  <title>Super-Resolution: Spectral Use Case Validation — Flood and Fire</title>
   <style>
     :root {
       --bg: #05060a;
@@ -41,6 +41,8 @@
       letter-spacing: -0.02em;
     }
     p { margin: 0 0 18px 0; color: var(--muted); }
+    a { color: #c3e8fb; text-decoration: none; border-bottom: 1px solid rgba(195,232,251,0.35); }
+    a:hover { border-bottom-color: rgba(195,232,251,0.8); }
     .pill {
       display: inline-flex;
       align-items: center;
@@ -99,32 +101,53 @@
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="card">
-      <div class="pill">Spectrally faithful Super-Resolution Validation</div>
-      <h1>LR vs SR Detections</h1>
+      <div class="pill">Spectral Use-Case Validation</div>
+      <h1>Super-Resolution: Spectral Validation for Flood 🌊 and Fire 🔥</h1>
+
       <p>
-        LDSR-S2 + SEN2SR uses a physics-constrained latent diffusion model to sharpen Sentinel-2 imagery while preserving
-        spectral signatures that drive environmental analytics. The maps below show how super-resolution
-        changes the detection of flood water (Valencia 2024) and burn scars (Palisades 2025) versus the
-        original low-resolution inputs. Explore the source at
-        <a href="https://github.com/ESAOpenSR/spectral_usecases" target="_blank" rel="noopener noreferrer">
-          https://github.com/ESAOpenSR/spectral_usecases
-        </a>.
+        This interactive visualization evaluates the impact of super-resolution on downstream
+        spectral analysis tasks using Sentinel-2 imagery. The results are generated with the
+        <a href="https://github.com/ESAOpenSR/opensr-model" target="_blank" rel="noopener noreferrer">
+          OpenSR latent diffusion model
+        </a>
+        in combination with
+        <a href="https://github.com/ESAOpenSR/SEN2SR" target="_blank" rel="noopener noreferrer">
+          SEN2SR
+        </a>,
+        a spectrally consistent super-resolution framework designed for Earth-observation data.
       </p>
 
+      <p>
+        The maps compare low-resolution inputs against super-resolved outputs for two real-world
+        use cases: flood-water delineation and burn-scar mapping. Rather than emphasizing visual
+        sharpness alone, the focus is on how improved spatial detail influences the structure and
+        coherence of spectral index responses used in operational remote-sensing workflows.
+      </p>
+
+      <p>
+        The full implementation, data processing pipeline, and evaluation code are available in the
+        <a href="https://github.com/ESAOpenSR/spectral_usecases" target="_blank" rel="noopener noreferrer">
+          OpenSR spectral use-cases repository
+        </a>.
+      </p>
 
       <div class="grid">
         <div class="panel">
           <strong>Key takeaway</strong>
-          Spectrally constrained SR reduced false negatives/positives in water and burn-severity indices,
-          showing that fidelity to spectra matters more than visual sharpness for operational RS pipelines.
+          Spectrally constrained super-resolution leads to more spatially coherent and better-defined
+          index responses. Improvements are most visible along object boundaries and fine structures,
+          where super-resolution sharpens transitions without distorting the underlying spectral signal.
         </div>
         <div class="panel">
           <strong>What to explore</strong>
-          Toggle SR and LR overlays, inspect spectral threshold outputs, and compare how boundaries tighten
-          around the red AOI outline in each scenario.
+          Toggle between low-resolution and super-resolved layers and examine how spatial detail changes
+          the delineation of flood extents and burn scars. Pay particular attention to boundary regions,
+          thin structures, and fragmented areas, where super-resolution produces more continuous and
+          geometrically consistent patterns compared to the low-resolution inputs.
         </div>
       </div>
 
@@ -134,9 +157,5 @@
       </div>
     </div>
   </div>
-
-
-  
 </body>
 </html>
-
