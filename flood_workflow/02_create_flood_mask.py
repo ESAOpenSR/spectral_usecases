@@ -1,12 +1,19 @@
-import rasterio
-from rasterio import features
+from pathlib import Path
+
 import geopandas as gpd
 import numpy as np
+import rasterio
+from rasterio import features
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_flood"
+RASTER_DIR = DATA_DIR / "raster_data"
+VECTOR_DIR = DATA_DIR / "vector_data"
 
 # --- INPUTS ---
-raster_path = "data_flood/raster_data/lr.tif"
-vector_path = "data_flood/vector_data/flood_extent.geojson"
-out_path    = "data_flood/raster_data/flood_mask.tif"
+raster_path = RASTER_DIR / "lr.tif"
+vector_path = VECTOR_DIR / "flood_extent.geojson"
+out_path = RASTER_DIR / "flood_mask.tif"
 
 # --- 1. Read raster (for shape, transform, CRS) ---
 with rasterio.open(raster_path) as src:

@@ -1,6 +1,13 @@
 import os
+from pathlib import Path
+
 import numpy as np
 import rasterio
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_fire"
+RASTER_DIR = DATA_DIR / "raster_data"
+PRODUCTS_DIR = DATA_DIR / "products"
 
 def compute_dnbr_for_prefix(
     prefix,
@@ -105,5 +112,5 @@ def compute_dnbr_for_prefix(
 
 
 if __name__ == "__main__":
-    compute_dnbr_for_prefix("lr", in_dir="data_fire/raster_data", out_dir="data/products")
-    compute_dnbr_for_prefix("sr", in_dir="data_fire/raster_data", out_dir="data/products")
+    compute_dnbr_for_prefix("lr", in_dir=RASTER_DIR, out_dir=PRODUCTS_DIR)
+    compute_dnbr_for_prefix("sr", in_dir=RASTER_DIR, out_dir=PRODUCTS_DIR)

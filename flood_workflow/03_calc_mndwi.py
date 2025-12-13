@@ -1,6 +1,13 @@
 import os
+from pathlib import Path
+
 import numpy as np
 import rasterio
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_flood"
+RASTER_DIR = DATA_DIR / "raster_data"
+PRODUCTS_DIR = DATA_DIR / "products"
 
 
 def compute_mndwi(
@@ -49,10 +56,10 @@ def compute_mndwi(
 
 if __name__ == "__main__":
     compute_mndwi(
-        input_path="data_flood/raster_data/lr.tif",
-        output_path="data_flood/products/lr_mndwi.tif",
+        input_path=RASTER_DIR / "lr.tif",
+        output_path=PRODUCTS_DIR / "lr_mndwi.tif",
     )
     compute_mndwi(
-        input_path="data_flood/raster_data/sr.tif",
-        output_path="data_flood/products/sr_mndwi.tif",
+        input_path=RASTER_DIR / "sr.tif",
+        output_path=PRODUCTS_DIR / "sr_mndwi.tif",
     )

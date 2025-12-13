@@ -1,10 +1,12 @@
-import mlstac
-import torch
+from pathlib import Path
+
 import cubo
 import matplotlib.pyplot as plt
-import sen2sr
-import rasterio
+import mlstac
 import numpy as np
+import rasterio
+import sen2sr
+import torch
 
 # Set Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -13,6 +15,11 @@ assert device.type == "cuda", "LDSR-S2 can only run on GPU."
 
 # @title
 # Export to Disk
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_flood"
+RASTER_DIR = DATA_DIR / "raster_data"
+
+
 def save_tensor_as_geotiff(tensor, attrs, out_path, super_resolved=False, sr_factor=4):
     """
     Save a PyTorch tensor as a georeferenced GeoTIFF using metadata in attrs.
@@ -173,5 +180,15 @@ if edge_size > 128:
 plot_lr_sr(low_resolution,super_resolution)
 
 # Save both Input and Output as georeferenced GeoTIFs
-save_tensor_as_geotiff(low_resolution, da[IMAGE_INDEX].attrs, out_path="data_flood/raster_data/lr.tif", super_resolved=False)
-save_tensor_as_geotiff(super_resolution, da[IMAGE_INDEX].attrs, out_path="data_flood/raster_data/sr.tif", super_resolved=True)
+save_tensor_as_geotiff(
+    low_resolution,
+    da[IMAGE_INDEX].attrs,
+    out_path=RASTER_DIR / "lr.tif",
+    super_resolved=False,
+)
+save_tensor_as_geotiff(
+    super_resolution,
+    da[IMAGE_INDEX].attrs,
+    out_path=RASTER_DIR / "sr.tif",
+    super_resolved=True,
+)

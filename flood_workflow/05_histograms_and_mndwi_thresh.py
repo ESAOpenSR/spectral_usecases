@@ -1,9 +1,15 @@
 import os
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
-import matplotlib.pyplot as plt
-from rasterio.warp import reproject
 from rasterio.enums import Resampling
+from rasterio.warp import reproject
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_flood"
+PRODUCTS_DIR = DATA_DIR / "products"
 
 
 def load_valid_pixels(path, mask_path=None):
@@ -166,10 +172,10 @@ def write_detections(
 
 
 if __name__ == "__main__":
-    base = "data_flood/products/"
+    base = PRODUCTS_DIR
 
-    lr_mndwi = os.path.join(base, "lr_mndwi.tif")
-    sr_mndwi = os.path.join(base, "sr_mndwi.tif")
+    lr_mndwi = base / "lr_mndwi.tif"
+    sr_mndwi = base / "sr_mndwi.tif"
 
     threshold = plot_mndwi_histograms_with_threshold(
         lr_path=lr_mndwi,
@@ -181,9 +187,9 @@ if __name__ == "__main__":
     # --- write detections using that threshold ---
     write_detections(
         lr_mndwi,
-        os.path.join(base, "lr_detections.tif"),
+        base / "lr_detections.tif",
         threshold,
         reference_path=sr_mndwi,  # upsample LR first so detection happens on SR grid
         resampling=Resampling.bilinear,  # explicit bilinear resampling for upsampling
     )
-    write_detections(sr_mndwi, os.path.join(base, "sr_detections.tif"), threshold)
+    write_detections(sr_mndwi, base / "sr_detections.tif", threshold)

@@ -1,10 +1,17 @@
 import os
 import csv
+from pathlib import Path
+
 import numpy as np
 import rasterio
-from scipy.ndimage import binary_dilation, binary_erosion
-from rasterio.warp import reproject
 from rasterio.enums import Resampling
+from rasterio.warp import reproject
+from scipy.ndimage import binary_dilation, binary_erosion
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_flood"
+RASTER_DIR = DATA_DIR / "raster_data"
+PRODUCTS_DIR = DATA_DIR / "products"
 
 
 def _reproject_mask_to_target(mask_arr, src_transform, src_crs, dst_shape, dst_transform, dst_crs):
@@ -218,15 +225,15 @@ def print_pretty_table(metrics):
 
 
 if __name__ == "__main__":
-    base_prods = "data_flood/products/"
-    base_data = "data_flood/raster_data/"
+    base_prods = PRODUCTS_DIR
+    base_data = RASTER_DIR
 
     m = compute_metrics(
-        lr_mndwi_path=base_prods + "lr_mndwi.tif",
-        sr_mndwi_path=base_prods + "sr_mndwi.tif",
-        lr_det_path=base_prods + "lr_detections.tif",
-        sr_det_path=base_prods + "sr_detections.tif",
-        gt_path=base_data + "flood_mask.tif",
+        lr_mndwi_path=base_prods / "lr_mndwi.tif",
+        sr_mndwi_path=base_prods / "sr_mndwi.tif",
+        lr_det_path=base_prods / "lr_detections.tif",
+        sr_det_path=base_prods / "sr_detections.tif",
+        gt_path=base_data / "flood_mask.tif",
         high_thr=0.2,
     )
 

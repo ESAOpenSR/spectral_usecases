@@ -1,0 +1,9 @@
+cubo
+geopandas
+matplotlib
+mlstac
+numpy
+rasterio
+scipy
+sen2sr
+torch

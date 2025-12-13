@@ -1,12 +1,19 @@
-import rasterio
-from rasterio import features
+from pathlib import Path
+
 import geopandas as gpd
 import numpy as np
+import rasterio
+from rasterio import features
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_fire"
+RASTER_DIR = DATA_DIR / "raster_data"
+VECTOR_DIR = DATA_DIR / "vector_data"
 
 # --- INPUTS ---
-raster_path = "data_fire/raster_data/lr_after.tif"
-vector_path = "data_fire/vector_data/palisades_fire_extent.gpkg"
-out_path    = "data_fire/raster_data/fire_mask.tif"
+raster_path = RASTER_DIR / "lr_after.tif"
+vector_path = VECTOR_DIR / "palisades_fire_extent.gpkg"
+out_path = RASTER_DIR / "fire_mask.tif"
 
 # --- 1. Read raster (for shape, transform, CRS) ---
 with rasterio.open(raster_path) as src:
