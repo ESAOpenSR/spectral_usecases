@@ -7,3 +7,4 @@ rasterio
 scipy
 sen2sr
 torch
+opensr-model
