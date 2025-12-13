@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ---- CONFIG ----
-ZIP_URL="https://huggingface.co/<USER>/<REPO>/resolve/main/data_usecases.zip"
+ZIP_URL="https://huggingface.co/datasets/simon-donike/viz/resolve/main/data_usecases.zip"
 ZIP_NAME="data_usecases.zip"
 
 # ---- DOWNLOAD ----
