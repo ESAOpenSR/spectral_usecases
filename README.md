@@ -1,19 +1,22 @@
 # Spectral Use Case Validation Repo
 
-This repository accompanies the paper on spectrally faithful super-resolution (SR) for remote-sensing imagery. It provides the supplementary material, including code and ready-to-share maps hosted on the project website (`usecases.opensr.eu`). The experiments reproduce the Valencia 2024 flood and the 2025 Palisades wildfire case studies, highlighting how physics-constrained latent diffusion SR improves spectral indices for water and burn-severity detection.
+This repository supports the paper’s LR vs. SR spectral use case validation, comparing native Sentinel-2 imagery against physics-constrained latent diffusion SR outputs for water (flood) and burn-severity (fire) detection. It provides reproducible code, data download helpers, and links to the accompanying walkthroughs on the project site (https://usecases.opensr.eu).
 
-## Getting started
+## Run the LR vs SR validations locally
+The steps below mirror the instructions shown in the notebooks; follow them once to enable both workflows.
+
 1. **Install dependencies**: create a virtual environment and install requirements.
    ```bash
    python -m venv .venv
    source .venv/bin/activate
    pip install -r requirements.txt
    ```
-2. **Fetch data**: download the prepared Sentinel-2 stacks (includes native, interpolated, and SR products) via the helper script, which populates `data_fire/` and `data_flood/` under each workflow directory.
+2. **Fetch data**: download the prepared Sentinel-2 stacks (native, interpolated, and SR products) with the helper script. It populates `data_fire/` and `data_flood/` under each workflow directory.
    ```bash
    ./fetch_data.sh
    ```
    Update `ZIP_URL` in the script to point at your storage location if you host the archive elsewhere.
+3. **Open the walkthroughs**: the rendered notebooks are available on the project site at https://usecases.opensr.eu/notebooks; they reference the same commands below for local execution.
 
 ## Running the workflows
 The workflows are organized by hazard; each step is a numbered script. Run them from their directory after data download.
