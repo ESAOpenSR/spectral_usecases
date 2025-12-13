@@ -111,6 +111,14 @@
       fillOpacity: 0.20
     };
 
+    const aoiStyle = {
+      color: "#ef4444",
+      weight: 2.5,
+      opacity: 0.9,
+      fillColor: "#ef4444",
+      fillOpacity: 0
+    };
+
     function fmtLatLng(latlng) {
       return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
     }
@@ -151,6 +159,10 @@
           <span class="swatch" style="background:${lrStyle.fillColor}"></span>
           LR detections
         </div>
+        <div class="row">
+          <span class="swatch" style="background:${aoiStyle.color}; border-color:${aoiStyle.color}"></span>
+          AOI outline
+        </div>
         <div class="small">
           Semi-transparent flood extent polygons over satellite imagery.
         </div>
@@ -161,20 +173,23 @@
 
     // --- Load layers ---
     Promise.all([
-      loadGeoJSON("data/sr_detections_4326.geojson", srStyle),
-      loadGeoJSON("data/lr_detections_4326.geojson", lrStyle)
-    ]).then(([srLayer, lrLayer]) => {
+      loadGeoJSON("data/sr_detections_4326_clipped.geojson", srStyle),
+      loadGeoJSON("data/lr_detections_4326_clipped.geojson", lrStyle),
+      loadGeoJSON("data/AOI.geojson", aoiStyle)
+    ]).then(([srLayer, lrLayer, aoiLayer]) => {
       srLayer.addTo(map);
       lrLayer.addTo(map);
+      aoiLayer.addTo(map);
 
-      const group = L.featureGroup([srLayer, lrLayer]);
+      const group = L.featureGroup([srLayer, lrLayer, aoiLayer]);
       map.fitBounds(group.getBounds(), { padding: [20, 20] });
 
       L.control.layers(
         null,
         {
           "SR detections": srLayer,
-          "LR detections": lrLayer
+          "LR detections": lrLayer,
+          "AOI": aoiLayer
         },
         { collapsed: false }
       ).addTo(map);
