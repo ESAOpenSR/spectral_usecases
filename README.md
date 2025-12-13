@@ -1,9 +1,6 @@
 <p align="center">
-  <a href="https://usecases.opensr.eu" target="_blank" rel="noreferrer" style="text-decoration:none;">
-    <button style="padding: 10px 18px; font-size: 16px; font-weight: 600; color: white; background-color: #1f6feb; border: none; border-radius: 6px; cursor: pointer;">Interactive Maps</button>
-  </a>
+  <img src="https://github.com/ESAOpenSR/opensr-model/blob/main/resources/opensr_logo.png?raw=true" width="250"/>
 </p>
-
 
 
 # Spectral Use Case Validation - Flood 🌊 and Fire 🔥
