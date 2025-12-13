@@ -60,5 +60,4 @@ python 06_compute_metrics.py             # evaluate detection metrics
 
 ## Notes
 - Both workflows assume GPU access for LDSR-S2 super-resolution (`torch.cuda.is_available()` must be true).
-- The `resources/` folder stores ancillary assets used by the notebooks and visualizations.
 - Replace paths or thresholds in the scripts as needed to test additional events or alternative SR baselines.
