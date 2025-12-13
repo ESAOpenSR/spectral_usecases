@@ -1,9 +1,17 @@
+import csv
+import os
+from pathlib import Path
+
 import numpy as np
 import rasterio
-from scipy.ndimage import binary_dilation, binary_erosion
-from rasterio.warp import reproject
 from rasterio.enums import Resampling
-import os,csv
+from rasterio.warp import reproject
+from scipy.ndimage import binary_dilation, binary_erosion
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_fire"
+RASTER_DIR = DATA_DIR / "raster_data"
+PRODUCTS_DIR = DATA_DIR / "products"
 
 def _reproject_mask_to_target(mask_arr, src_transform, src_crs,
                               dst_shape, dst_transform, dst_crs):
@@ -243,15 +251,15 @@ def print_pretty_table(metrics):
 
 
 if __name__ == "__main__":
-    base_prods = "data_fire/products/"
-    base_data = "data_fire/raster_data/"
+    base_prods = PRODUCTS_DIR
+    base_data = RASTER_DIR
 
     m = compute_metrics(
-        lr_dnbr_path=base_prods + "lr_dnbr.tif",
-        sr_dnbr_path=base_prods + "sr_dnbr.tif",
-        lr_det_path=base_prods + "lr_detections.tif",
-        sr_det_path=base_prods + "sr_detections.tif",
-        gt_path=base_data + "fire_mask.tif",
+        lr_dnbr_path=base_prods / "lr_dnbr.tif",
+        sr_dnbr_path=base_prods / "sr_dnbr.tif",
+        lr_det_path=base_prods / "lr_detections.tif",
+        sr_det_path=base_prods / "sr_detections.tif",
+        gt_path=base_data / "fire_mask.tif",
         high_thr=0.5,
     )
 

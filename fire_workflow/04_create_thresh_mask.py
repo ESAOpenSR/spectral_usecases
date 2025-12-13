@@ -1,5 +1,12 @@
-import rasterio
+from pathlib import Path
+
 import numpy as np
+import rasterio
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_fire"
+RASTER_DIR = DATA_DIR / "raster_data"
+PRODUCTS_DIR = DATA_DIR / "products"
 
 def make_valid_land_mask(
     input_tif,
@@ -76,8 +83,8 @@ def make_valid_land_mask(
 
 
 if __name__ == "__main__":
-    input_tif = "data_fire/raster_data/lr_after.tif"
-    output_tif = "data_fire/products/valid_land_mask.tif"
+    input_tif = RASTER_DIR / "lr_after.tif"
+    output_tif = PRODUCTS_DIR / "valid_land_mask.tif"
 
     valid_mask, _, thr = make_valid_land_mask(
         input_tif,

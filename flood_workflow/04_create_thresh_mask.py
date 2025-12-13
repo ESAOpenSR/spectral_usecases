@@ -1,5 +1,12 @@
-import rasterio
+from pathlib import Path
+
 import numpy as np
+import rasterio
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data_flood"
+RASTER_DIR = DATA_DIR / "raster_data"
+PRODUCTS_DIR = DATA_DIR / "products"
 
 
 def make_water_mask(
@@ -76,8 +83,8 @@ def make_water_mask(
 
 
 if __name__ == "__main__":
-    input_tif = "data_flood/raster_data/lr.tif"
-    output_tif = "data_flood/products/water_mask.tif"
+    input_tif = RASTER_DIR / "lr.tif"
+    output_tif = PRODUCTS_DIR / "water_mask.tif"
 
     water_mask, _, thr = make_water_mask(
         input_tif,
