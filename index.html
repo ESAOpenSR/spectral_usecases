@@ -39,6 +39,7 @@
       border-radius: 20px;
       padding: 28px;
       box-shadow: 0 22px 80px rgba(0,0,0,0.40);
+      position: relative;
     }
     h1 {
       margin: 0 0 12px 0;
@@ -100,6 +101,26 @@
       border-color: rgba(255,255,255,0.22);
       background: rgba(255,255,255,0.07);
     }
+    .repo-link {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      text-decoration: none;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.28);
+      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+    }
+    .repo-link:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.12);
+    }
     .hint { margin-top: 16px; font-size: 13px; color: rgba(232,236,245,0.6); }
     .teasers {
       margin-top: 18px;
@@ -152,6 +173,7 @@
 <body>
   <div class="wrap">
     <div class="card">
+      <a class="repo-link" href="https://github.com/ESAOpenSR/spectral_usecases" target="_blank" rel="noopener noreferrer">GitHub Repo</a>
       <div class="pill">Spectral Use-Case Validation</div>
       <h1>Super-Resolution: Spectral Validation for Flood 🌊 and Fire 🔥</h1>
 
@@ -205,12 +227,12 @@
 
       <div class="teasers">
         <a class="teaser" href="./flood/">
-          <img src="https://raw.githubusercontent.com/ESAOpenSR/spectral_usecases/c24527b721567a8a547985b419082a517b1b6dce/resources/flood_teaser_3.png" alt="Flood map preview" loading="lazy" />
-          <div class="teaser-caption">Flood map preview</div>
+          <img src="https://raw.githubusercontent.com/ESAOpenSR/spectral_usecases/c24527b721567a8a547985b419082a517b1b6dce/resources/flood_teaser_3.png" alt="Flood Map" loading="lazy" />
+          <div class="teaser-caption">Flood Map</div>
         </a>
         <a class="teaser" href="./fire/">
-          <img src="https://raw.githubusercontent.com/ESAOpenSR/spectral_usecases/c24527b721567a8a547985b419082a517b1b6dce/resources/fire_teaser_3.png" alt="Burn scar map preview" loading="lazy" />
-          <div class="teaser-caption">Burn scar map preview</div>
+          <img src="https://raw.githubusercontent.com/ESAOpenSR/spectral_usecases/c24527b721567a8a547985b419082a517b1b6dce/resources/fire_teaser_3.png" alt="Burn Scar Map" loading="lazy" />
+          <div class="teaser-caption">Burn Scar Map</div>
         </a>
       </div>
     </div>
