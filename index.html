@@ -8,46 +8,75 @@
     :root {
       --bg: #05060a;
       --surface: rgba(255,255,255,0.04);
+      --panel: rgba(255,255,255,0.06);
       --text: #e8ecf5;
-      --muted: rgba(232,236,245,0.7);
+      --muted: rgba(232,236,245,0.78);
       --accent: #38bdf8;
       --accent2: #f97316;
       --border: rgba(255,255,255,0.10);
     }
     html, body { height: 100%; margin: 0; }
     body {
-      background: radial-gradient(1000px 700px at 10% 20%, rgba(56,189,248,0.12), transparent 60%),
-                  radial-gradient(900px 600px at 80% 70%, rgba(249,115,22,0.10), transparent 60%),
+      background: radial-gradient(1200px 720px at 15% 18%, rgba(56,189,248,0.14), transparent 60%),
+                  radial-gradient(900px 620px at 82% 72%, rgba(249,115,22,0.12), transparent 60%),
                   var(--bg);
       color: var(--text);
-      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     }
     .wrap {
-      max-width: 880px;
-      padding: 56px 20px;
+      max-width: 1080px;
+      padding: 64px 20px 72px;
       margin: 0 auto;
     }
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 26px;
-      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 22px 80px rgba(0,0,0,0.40);
     }
     h1 {
-      margin: 0 0 10px 0;
-      font-size: 32px;
+      margin: 0 0 12px 0;
+      font-size: 34px;
       letter-spacing: -0.02em;
     }
     p { margin: 0 0 18px 0; color: var(--muted); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(56,189,248,0.14);
+      border: 1px solid rgba(56,189,248,0.4);
+      border-radius: 999px;
+      color: #c3e8fb;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 18px 0 10px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .panel strong { display: block; margin-bottom: 6px; }
     .btns {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 12px;
-      margin-top: 14px;
+      margin-top: 18px;
     }
     a.btn {
-      display: inline-block;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
       text-decoration: none;
       text-align: center;
       padding: 12px 14px;
@@ -56,16 +85,16 @@
       background: rgba(255,255,255,0.03);
       color: var(--text);
       transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: -0.01em;
     }
     a.btn:hover {
       transform: translateY(-1px);
       border-color: rgba(255,255,255,0.22);
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.07);
     }
-    .hint { margin-top: 14px; font-size: 13px; color: rgba(232,236,245,0.55); }
+    .hint { margin-top: 16px; font-size: 13px; color: rgba(232,236,245,0.6); }
     @media (max-width: 640px) {
-      .btns { grid-template-columns: 1fr; }
       h1 { font-size: 28px; }
     }
   </style>
@@ -73,19 +102,36 @@
 <body>
   <div class="wrap">
     <div class="card">
+      <div class="pill">Hyperalis · Spectrally faithful super-resolution</div>
       <h1>LR vs SR Detections</h1>
       <p>
-        Interactive maps comparing flood and fire detection outputs from low-resolution (LR) inputs and
-        super-resolved (SR) imagery. Overlays are semi-transparent polygons on satellite imagery.
+        A physics-constrained latent diffusion model is used to sharpen Sentinel-2 imagery while preserving
+        spectral signatures that drive environmental analytics. The maps below show how super-resolution
+        changes the detection of flood water (Valencia 2024) and burn scars (Palisades 2025) versus the
+        original low-resolution inputs.
       </p>
 
+      <div class="grid">
+        <div class="panel">
+          <strong>Key takeaway</strong>
+          Spectrally constrained SR reduced false negatives/positives in water and burn-severity indices,
+          showing that fidelity to spectra matters more than visual sharpness for operational RS pipelines.
+        </div>
+        <div class="panel">
+          <strong>What to explore</strong>
+          Toggle SR and LR overlays, inspect spectral threshold outputs, and compare how boundaries tighten
+          around the areas of interest in each scenario.
+        </div>
+      </div>
+
       <div class="btns">
-        <a class="btn" href="./flood/">Open Flood Use Case</a>
-        <a class="btn" href="./fire/">Open Fire Use Case</a>
+        <a class="btn" href="./flood/">🌊 Open Flood Use Case</a>
+        <a class="btn" href="./fire/">🔥 Open Fire Use Case</a>
+        <a class="btn" href="https://github.com/hyperalis/spectral_usecases"><span aria-hidden="true">↗</span> View GitHub repo</a>
       </div>
 
       <div class="hint">
-        Hosted on GitHub Pages. Data and maps are static assets served directly from this repository.
+        All content is static and can be hosted from GitHub Pages or any static file server.
       </div>
     </div>
   </div>
