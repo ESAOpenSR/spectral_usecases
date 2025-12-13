@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flood detections: LR vs SR</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100%; width: 100%; }
+
+    .panel {
+      background: rgba(10, 12, 18, 0.85);
+      color: #e8ecf5;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font: 14px/1.25 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+      min-width: 210px;
+    }
+    .panel .row { display: flex; align-items: center; margin-top: 6px; }
+    .panel .swatch {
+      width: 14px; height: 14px; border-radius: 3px;
+      margin-right: 8px;
+      border: 1px solid rgba(255,255,255,0.35);
+    }
+    .coords {
+      font-variant-numeric: tabular-nums;
+      min-width: 220px;
+    }
+    .small {
+      font-size: 12px;
+      color: rgba(232,236,245,0.8);
+      margin-top: 6px;
+    }
+    .leaflet-control-layers {
+      background: rgba(10,12,18,0.85);
+      color: #e8ecf5;
+      border-radius: 10px;
+    }
+
+    /* Dark-style scale bar */
+    .leaflet-control-scale {
+      background: rgba(10, 12, 18, 0.65);
+      padding: 6px 8px;
+      border-radius: 10px;
+      color: #e8ecf5;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      backdrop-filter: blur(6px);
+    }
+    .leaflet-control-scale-line {
+      border-color: rgba(232,236,245,0.8) !important;
+      color: #e8ecf5 !important;
+      background: transparent !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Leaflet -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script>
+    // --- Map ---
+    const map = L.map("map", { zoomControl: true });
+
+    // Esri World Imagery
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        maxZoom: 19,
+        attribution:
+          "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics"
+      }
+    ).addTo(map);
+
+    // Scale bar
+    L.control.scale({
+      position: "bottomright",
+      metric: true,
+      imperial: false
+    }).addTo(map);
+
+    // --- Styles ---
+    const srStyle = {
+      color: "#38bdf8",
+      weight: 2,
+      opacity: 0.9,
+      fillColor: "#38bdf8",
+      fillOpacity: 0.25
+    };
+
+    const lrStyle = {
+      color: "#f97316",
+      weight: 2,
+      opacity: 0.9,
+      fillColor: "#f97316",
+      fillOpacity: 0.20
+    };
+
+    function fmtLatLng(latlng) {
+      return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+    }
+
+    async function loadGeoJSON(url, style) {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`Failed to load ${url}`);
+      const data = await r.json();
+      return L.geoJSON(data, { style });
+    }
+
+    // --- Coordinate readout ---
+    const coords = L.control({ position: "bottomright" });
+    coords.onAdd = () => {
+      const div = L.DomUtil.create("div", "panel coords");
+      div.innerHTML =
+        `<strong>Cursor</strong><div id="coordsText" class="small">—</div>`;
+      return div;
+    };
+    coords.addTo(map);
+
+    map.on("mousemove", (e) => {
+      const el = document.getElementById("coordsText");
+      if (el) el.textContent = fmtLatLng(e.latlng);
+    });
+
+    // --- Legend ---
+    const legend = L.control({ position: "bottomleft" });
+    legend.onAdd = () => {
+      const div = L.DomUtil.create("div", "panel");
+      div.innerHTML = `
+        <div><strong>Flood detections</strong></div>
+        <div class="row">
+          <span class="swatch" style="background:${srStyle.fillColor}"></span>
+          SR detections
+        </div>
+        <div class="row">
+          <span class="swatch" style="background:${lrStyle.fillColor}"></span>
+          LR detections
+        </div>
+        <div class="small">
+          Semi-transparent flood extent polygons over satellite imagery.
+        </div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+
+    // --- Load layers ---
+    Promise.all([
+      loadGeoJSON("data/sr_detections_4326.geojson", srStyle),
+      loadGeoJSON("data/lr_detections_4326.geojson", lrStyle)
+    ]).then(([srLayer, lrLayer]) => {
+      srLayer.addTo(map);
+      lrLayer.addTo(map);
+
+      const group = L.featureGroup([srLayer, lrLayer]);
+      map.fitBounds(group.getBounds(), { padding: [20, 20] });
+
+      L.control.layers(
+        null,
+        {
+          "SR detections": srLayer,
+          "LR detections": lrLayer
+        },
+        { collapsed: false }
+      ).addTo(map);
+    }).catch(err => {
+      console.error(err);
+      alert(err.message);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hyperalis — SR vs LR Detections</title>
+  <style>
+    :root {
+      --bg: #05060a;
+      --surface: rgba(255,255,255,0.04);
+      --text: #e8ecf5;
+      --muted: rgba(232,236,245,0.7);
+      --accent: #38bdf8;
+      --accent2: #f97316;
+      --border: rgba(255,255,255,0.10);
+    }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: radial-gradient(1000px 700px at 10% 20%, rgba(56,189,248,0.12), transparent 60%),
+                  radial-gradient(900px 600px at 80% 70%, rgba(249,115,22,0.10), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .wrap {
+      max-width: 880px;
+      padding: 56px 20px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+    }
+    h1 {
+      margin: 0 0 10px 0;
+      font-size: 32px;
+      letter-spacing: -0.02em;
+    }
+    p { margin: 0 0 18px 0; color: var(--muted); }
+    .btns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    a.btn {
+      display: inline-block;
+      text-decoration: none;
+      text-align: center;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      font-weight: 600;
+    }
+    a.btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.05);
+    }
+    .hint { margin-top: 14px; font-size: 13px; color: rgba(232,236,245,0.55); }
+    @media (max-width: 640px) {
+      .btns { grid-template-columns: 1fr; }
+      h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>LR vs SR Detections</h1>
+      <p>
+        Interactive maps comparing flood and fire detection outputs from low-resolution (LR) inputs and
+        super-resolved (SR) imagery. Overlays are semi-transparent polygons on satellite imagery.
+      </p>
+
+      <div class="btns">
+        <a class="btn" href="./flood/">Open Flood Use Case</a>
+        <a class="btn" href="./fire/">Open Fire Use Case</a>
+      </div>
+
+      <div class="hint">
+        Hosted on GitHub Pages. Data and maps are static assets served directly from this repository.
+      </div>
+    </div>
+  </div>
+
+
+  
+</body>
+</html>
