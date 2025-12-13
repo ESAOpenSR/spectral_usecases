@@ -11,6 +11,8 @@ inf_2.py
 playground.py
 model/
 *.gpkg
+data_fire
+data_flood
 
 # images
 *.tif
