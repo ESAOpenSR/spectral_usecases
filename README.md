@@ -5,9 +5,14 @@
 
 This repository supports the paper’s LR vs. SR spectral use case validation, comparing native Sentinel-2 imagery against physics-constrained latent diffusion SR outputs for water (flood) and burn-severity (fire) detection. It provides reproducible code, data download helpers, and links to the accompanying walkthroughs on the project site [usecases.opensr.eu](https://usecases.opensr.eu).
 
-![Map Example](https://github.com/ESAOpenSR/spectral_usecases/blob/15370fdf93cd2965b76abd2bec848cede6da156a/resources/flood_map_example.png)
 
-
+<div style="text-align: center;">
+  <img
+    src="https://github.com/ESAOpenSR/spectral_usecases/blob/15370fdf93cd2965b76abd2bec848cede6da156a/resources/flood_map_example.png"
+    width="250"
+    alt="Flood map example"
+  />
+</div>
 
 
 
