@@ -1,3 +1,6 @@
-# GH-Pages Website Hosting Branch
-This branch only holds the code and data to serve the interactive maps via GitHub Pages.  
-Got to usecases.opensr.eu/
+# GitHub Pages — Interactive Maps
+
+This branch contains only the static assets required to serve the interactive
+spectral super-resolution maps via GitHub Pages.
+
+🌐 **Live site:** https://usecases.opensr.eu
