@@ -9,7 +9,7 @@ This repository supports the paper’s LR vs. SR spectral use case validation, c
 <div style="text-align: center;">
   <img
     src="https://github.com/ESAOpenSR/spectral_usecases/blob/15370fdf93cd2965b76abd2bec848cede6da156a/resources/flood_map_example.png"
-    width="350"
+    width="500"
     alt="Flood map example"
   />
 </div>
