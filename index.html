@@ -96,6 +96,38 @@
       background: rgba(255,255,255,0.07);
     }
     .hint { margin-top: 16px; font-size: 13px; color: rgba(232,236,245,0.6); }
+    .teasers {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .teaser {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 10px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.32);
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+      color: inherit;
+    }
+    .teaser img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .teaser .teaser-caption {
+      padding: 12px 8px 2px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .teaser:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.22);
+      box-shadow: 0 18px 56px rgba(0,0,0,0.36);
+    }
     @media (max-width: 640px) {
       h1 { font-size: 28px; }
     }
@@ -154,6 +186,17 @@
       <div class="btns">
         <a class="btn" href="./flood/">🌊 Flood Map</a>
         <a class="btn" href="./fire/">🔥 Burn Scar Map</a>
+      </div>
+
+      <div class="teasers">
+        <a class="teaser" href="./flood/">
+          <img src="https://raw.githubusercontent.com/ESAOpenSR/spectral_usecases/c24527b721567a8a547985b419082a517b1b6dce/resources/flood_teaser_3.png" alt="Flood map preview" loading="lazy" />
+          <div class="teaser-caption">Flood map preview</div>
+        </a>
+        <a class="teaser" href="./fire/">
+          <img src="https://raw.githubusercontent.com/ESAOpenSR/spectral_usecases/c24527b721567a8a547985b419082a517b1b6dce/resources/fire_teaser_3.png" alt="Burn scar map preview" loading="lazy" />
+          <div class="teaser-caption">Burn scar map preview</div>
+        </a>
       </div>
     </div>
   </div>
