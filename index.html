@@ -20,13 +20,22 @@
       --accent2: #f97316;
       --border: rgba(255,255,255,0.10);
     }
-    html, body { height: 100%; margin: 0; }
+    html, body { min-height: 100%; margin: 0; }
     body {
-      background: radial-gradient(1200px 720px at 15% 18%, rgba(56,189,248,0.14), transparent 60%),
-                  radial-gradient(900px 620px at 82% 72%, rgba(249,115,22,0.12), transparent 60%),
-                  var(--bg);
+      background: var(--bg);
       color: var(--text);
       font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(1200px 720px at 18% 16%, rgba(56,189,248,0.14), transparent 62%),
+                  radial-gradient(900px 620px at 80% 74%, rgba(249,115,22,0.12), transparent 62%);
+      z-index: -1;
+      pointer-events: none;
     }
     .wrap {
       max-width: 1080px;
@@ -40,6 +49,14 @@
       padding: 28px;
       box-shadow: 0 22px 80px rgba(0,0,0,0.40);
       position: relative;
+    }
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
     }
     h1 {
       margin: 0 0 12px 0;
@@ -102,19 +119,19 @@
       background: rgba(255,255,255,0.07);
     }
     .repo-link {
-      position: absolute;
-      top: 20px;
-      right: 20px;
       background: rgba(255,255,255,0.06);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 8px 12px;
+      padding: 10px 14px;
       border-radius: 12px;
       font-weight: 700;
       letter-spacing: -0.01em;
       text-decoration: none;
       box-shadow: 0 12px 32px rgba(0,0,0,0.28);
       transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
     .repo-link:hover {
       transform: translateY(-1px);
@@ -159,6 +176,8 @@
       h1 { font-size: 30px; }
       p { font-size: 15px; }
       .card { padding: 24px; }
+      .top-bar { gap: 10px; }
+      .repo-link { width: 100%; justify-content: center; }
     }
 
     @media (max-width: 640px) {
@@ -166,6 +185,7 @@
       .wrap { padding: 40px 16px 56px; }
       .grid, .teasers { gap: 14px; }
       .btns { grid-template-columns: 1fr; }
+      .top-bar { justify-content: center; }
     }
   </style>
 </head>
@@ -173,8 +193,12 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <a class="repo-link" href="https://github.com/ESAOpenSR/spectral_usecases" target="_blank" rel="noopener noreferrer">GitHub Repo</a>
-      <div class="pill">Spectral Use-Case Validation</div>
+      <div class="top-bar">
+        <div class="pill">Spectral Use-Case Validation</div>
+        <a class="repo-link" href="https://github.com/ESAOpenSR/spectral_usecases" target="_blank" rel="noopener noreferrer">
+          GitHub Repo
+        </a>
+      </div>
       <h1>Super-Resolution: Spectral Validation for Flood 🌊 and Fire 🔥</h1>
 
       <p>
