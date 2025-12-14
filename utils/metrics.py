@@ -107,8 +107,8 @@ def _perimeter_to_area_ratio(mask: np.ndarray, transform) -> float:
 
     # Internal boundaries (between 0/1) contribute perimeter equal to the
     # dimension orthogonal to the transition.
-    horizontal_transitions = np.abs(mask_bool[:, 1:] - mask_bool[:, :-1]).sum(dtype=np.int64)
-    vertical_transitions = np.abs(mask_bool[1:, :] - mask_bool[:-1, :]).sum(dtype=np.int64)
+    horizontal_transitions = (mask_bool[:, 1:] != mask_bool[:, :-1]).sum(dtype=np.int64)
+    vertical_transitions = (mask_bool[1:, :] != mask_bool[:-1, :]).sum(dtype=np.int64)
 
     perimeter = (horizontal_transitions * pixel_height) + (vertical_transitions * pixel_width)
 

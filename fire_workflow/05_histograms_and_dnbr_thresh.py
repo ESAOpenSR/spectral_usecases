@@ -7,7 +7,7 @@ import rasterio
 from rasterio.enums import Resampling
 from rasterio.warp import reproject
 
-BASE_DIR = os.path.abspath("/data1/simon/GitHub/spectral_usecases/")
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = os.path.join(BASE_DIR, "data_fire")
 RASTER_DIR = os.path.join(DATA_DIR, "raster_data")
 PRODUCTS_DIR = os.path.join(DATA_DIR, "products")
