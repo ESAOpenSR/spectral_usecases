@@ -4,13 +4,14 @@ import csv
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Tuple
 
 import numpy as np
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.warp import reproject
 from scipy.ndimage import binary_dilation, binary_erosion, sobel
+import matplotlib.pyplot as plt
 
 
 @dataclass
@@ -62,6 +63,12 @@ class DetectionMetrics:
     boundary_grad_LR: float
     boundary_grad_SR: float
     boundary_grad_rel_change: float
+    cohens_d_LR: float
+    cohens_d_SR: float
+    cohens_d_rel_change: float
+    js_divergence_LR: float
+    js_divergence_SR: float
+    js_divergence_rel_change: float
     confusion_LR: ConfusionMetrics
     confusion_SR: ConfusionMetrics
 
@@ -82,9 +89,23 @@ class DetectionMetrics:
             "boundary_grad_LR": self.boundary_grad_LR,
             "boundary_grad_SR": self.boundary_grad_SR,
             "boundary_grad_rel_change": self.boundary_grad_rel_change,
+            "cohens_d_LR": self.cohens_d_LR,
+            "cohens_d_SR": self.cohens_d_SR,
+            "cohens_d_rel_change": self.cohens_d_rel_change,
+            "js_divergence_LR": self.js_divergence_LR,
+            "js_divergence_SR": self.js_divergence_SR,
+            "js_divergence_rel_change": self.js_divergence_rel_change,
             "confusion_LR": self.confusion_LR.as_dict(),
             "confusion_SR": self.confusion_SR.as_dict(),
         }
+
+
+@dataclass
+class DistributionSamples:
+    lr_detected: np.ndarray
+    lr_background: np.ndarray
+    sr_detected: np.ndarray
+    sr_background: np.ndarray
 
 
 def _pixel_size(transform):
@@ -152,6 +173,57 @@ def _mean_boundary_gradient(signal: np.ndarray, mask: np.ndarray, transform) -> 
     return float(np.nanmean(grad_mag[boundary]))
 
 
+def _finite_values(values: np.ndarray) -> np.ndarray:
+    return values[np.isfinite(values)]
+
+
+def _cohens_d(samples_a: np.ndarray, samples_b: np.ndarray) -> float:
+    a = _finite_values(samples_a)
+    b = _finite_values(samples_b)
+    if a.size < 2 or b.size < 2:
+        return np.nan
+
+    mean_a = float(np.mean(a))
+    mean_b = float(np.mean(b))
+    var_a = float(np.var(a, ddof=1))
+    var_b = float(np.var(b, ddof=1))
+
+    pooled_std = math.sqrt(((a.size - 1) * var_a + (b.size - 1) * var_b) / max((a.size + b.size - 2), 1))
+    if pooled_std == 0:
+        return np.nan
+
+    return (mean_a - mean_b) / pooled_std
+
+
+def _jensen_shannon_divergence(samples_a: np.ndarray, samples_b: np.ndarray, bins: int = 64) -> float:
+    a = _finite_values(samples_a)
+    b = _finite_values(samples_b)
+    if a.size == 0 or b.size == 0:
+        return np.nan
+
+    data_min = float(min(np.min(a), np.min(b)))
+    data_max = float(max(np.max(a), np.max(b)))
+    if data_min == data_max:
+        return np.nan
+
+    hist_range = (data_min, data_max)
+    p, _ = np.histogram(a, bins=bins, range=hist_range, density=True)
+    q, _ = np.histogram(b, bins=bins, range=hist_range, density=True)
+
+    # Convert to probabilities
+    p = p / np.sum(p)
+    q = q / np.sum(q)
+
+    m = 0.5 * (p + q)
+
+    def _kl_divergence(x, y):
+        mask = (x > 0) & (y > 0)
+        return np.sum(x[mask] * np.log(x[mask] / y[mask]))
+
+    js = 0.5 * _kl_divergence(p, m) + 0.5 * _kl_divergence(q, m)
+    return float(js)
+
+
 def _reproject_mask_to_target(mask_arr, src_transform, src_crs, dst_shape, dst_transform, dst_crs):
     """Nearest-neighbour reproject/resample of a mask to a target grid."""
     dst = np.zeros(dst_shape, dtype=mask_arr.dtype)
@@ -214,7 +286,9 @@ def compute_detection_metrics(
     sr_det_path: Path,
     gt_path: Path,
     high_thr: float,
-) -> DetectionMetrics:
+    *,
+    return_samples: bool = False,
+) -> DetectionMetrics | Tuple[DetectionMetrics, DistributionSamples]:
     """Compute shared flood/fire metrics on LR and SR datasets."""
 
     lr_signal_src = rasterio.open(lr_signal_path)
@@ -355,6 +429,19 @@ def compute_detection_metrics(
     boundary_grad_SR = _mean_boundary_gradient(sr_signal, det_SR_signal_grid, sr_signal_src.transform)
     boundary_grad_rel_change = (boundary_grad_SR - boundary_grad_LR) / max(boundary_grad_LR, 1e-9)
 
+    lr_detected_vals = lr_signal[det_LR.astype(bool)]
+    lr_background_vals = lr_signal[~det_LR.astype(bool)]
+    sr_detected_vals = sr_signal[det_SR_signal_grid.astype(bool)]
+    sr_background_vals = sr_signal[~det_SR_signal_grid.astype(bool)]
+
+    cohens_d_LR = _cohens_d(lr_detected_vals, lr_background_vals)
+    cohens_d_SR = _cohens_d(sr_detected_vals, sr_background_vals)
+    cohens_d_rel_change = (cohens_d_SR - cohens_d_LR) / max(abs(cohens_d_LR), 1e-9)
+
+    js_div_LR = _jensen_shannon_divergence(lr_detected_vals, lr_background_vals)
+    js_div_SR = _jensen_shannon_divergence(sr_detected_vals, sr_background_vals)
+    js_div_rel_change = (js_div_SR - js_div_LR) / max(abs(js_div_LR), 1e-9)
+
     median_LR = np.nanmedian(lr_signal[gt_lr_signal == 1])
     median_SR = np.nanmedian(sr_signal[gt_sr_signal == 1])
 
@@ -383,7 +470,7 @@ def compute_detection_metrics(
     sr_det_src.close()
     gt_src.close()
 
-    return DetectionMetrics(
+    metrics = DetectionMetrics(
         N_LR=N_LR,
         N_SR=N_SR,
         rel_change=rel_change,
@@ -399,9 +486,26 @@ def compute_detection_metrics(
         boundary_grad_LR=boundary_grad_LR,
         boundary_grad_SR=boundary_grad_SR,
         boundary_grad_rel_change=boundary_grad_rel_change,
+        cohens_d_LR=cohens_d_LR,
+        cohens_d_SR=cohens_d_SR,
+        cohens_d_rel_change=cohens_d_rel_change,
+        js_divergence_LR=js_div_LR,
+        js_divergence_SR=js_div_SR,
+        js_divergence_rel_change=js_div_rel_change,
         confusion_LR=confusion_LR,
         confusion_SR=confusion_SR,
     )
+
+    if return_samples:
+        samples = DistributionSamples(
+            lr_detected=_finite_values(lr_detected_vals),
+            lr_background=_finite_values(lr_background_vals),
+            sr_detected=_finite_values(sr_detected_vals),
+            sr_background=_finite_values(sr_background_vals),
+        )
+        return metrics, samples
+
+    return metrics
 
 
 def print_pretty_table(metrics: DetectionMetrics, title: str, spectral_name: str) -> None:
@@ -445,6 +549,18 @@ def print_pretty_table(metrics: DetectionMetrics, title: str, spectral_name: str
         f"{metrics.boundary_grad_SR:>15.6f} "
         f"{metrics.boundary_grad_rel_change*100:>14.2f}%"
     )
+    print(
+        f"{'Cohen\'s d (sep.)':<25} "
+        f"{metrics.cohens_d_LR:>15.6f} "
+        f"{metrics.cohens_d_SR:>15.6f} "
+        f"{metrics.cohens_d_rel_change*100:>14.2f}%"
+    )
+    print(
+        f"{'JS Divergence':<25} "
+        f"{metrics.js_divergence_LR:>15.6f} "
+        f"{metrics.js_divergence_SR:>15.6f} "
+        f"{metrics.js_divergence_rel_change*100:>14.2f}%"
+    )
 
     print("\n================================================\n")
 
@@ -469,6 +585,8 @@ def write_metrics_csv(csv_path: Path, metrics: DetectionMetrics, spectral_name: 
                 metrics.boundary_grad_rel_change,
             ]
         )
+        writer.writerow(["Cohen's d (separation)", metrics.cohens_d_LR, metrics.cohens_d_SR, metrics.cohens_d_rel_change])
+        writer.writerow(["Jensen-Shannon Divergence", metrics.js_divergence_LR, metrics.js_divergence_SR, metrics.js_divergence_rel_change])
 
         writer.writerow(["True Positives", metrics.confusion_LR.tp, metrics.confusion_SR.tp, ""])
         writer.writerow(["True Negatives", metrics.confusion_LR.tn, metrics.confusion_SR.tn, ""])
@@ -487,3 +605,48 @@ def write_metrics_csv(csv_path: Path, metrics: DetectionMetrics, spectral_name: 
             metrics.confusion_SR.balanced_accuracy,
             "",
         ])
+
+
+def plot_distribution_separation(
+    samples: DistributionSamples,
+    metrics: DetectionMetrics,
+    spectral_name: str,
+    output_path: Path,
+    bins: int = 80,
+) -> None:
+    """Plot detected vs. background distributions for LR and SR signals."""
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+    plot_data = [
+        (
+            samples.lr_detected,
+            samples.lr_background,
+            f"LR {spectral_name}\nCohen's d: {metrics.cohens_d_LR:.3f} | JS: {metrics.js_divergence_LR:.3f}",
+        ),
+        (
+            samples.sr_detected,
+            samples.sr_background,
+            f"SR {spectral_name}\nCohen's d: {metrics.cohens_d_SR:.3f} | JS: {metrics.js_divergence_SR:.3f}",
+        ),
+    ]
+
+    for ax, (det, bg, title) in zip(axes, plot_data):
+        has_data = det.size > 0 and bg.size > 0
+        if has_data:
+            ax.hist(bg, bins=bins, alpha=0.6, label="Non-detected", density=True, color="#999999")
+            ax.hist(det, bins=bins, alpha=0.6, label="Detected", density=True, color="#1f77b4")
+        else:
+            ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
+
+        ax.set_title(title)
+        ax.set_xlabel(spectral_name)
+        ax.grid(True, linestyle="--", alpha=0.4)
+        if has_data:
+            ax.legend()
+
+    axes[0].set_ylabel("Density")
+    fig.tight_layout()
+    plt.savefig(output_path, dpi=200)
+    plt.close(fig)

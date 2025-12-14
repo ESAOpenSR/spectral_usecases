@@ -10,7 +10,12 @@ PRODUCTS_DIR = DATA_DIR / "products"
 if str(REPO_ROOT) not in sys.path:
     sys.path.append(str(REPO_ROOT))
 
-from utils.metrics import compute_detection_metrics, print_pretty_table, write_metrics_csv
+from utils.metrics import (
+    compute_detection_metrics,
+    plot_distribution_separation,
+    print_pretty_table,
+    write_metrics_csv,
+)
 
 
 def compute_metrics(
@@ -28,6 +33,7 @@ def compute_metrics(
         sr_det_path=sr_det_path,
         gt_path=gt_path,
         high_thr=high_thr,
+        return_samples=True,
     )
 
 
@@ -35,7 +41,7 @@ if __name__ == "__main__":
     base_prods = PRODUCTS_DIR
     base_data = RASTER_DIR
 
-    m = compute_metrics(
+    m, samples = compute_metrics(
         lr_mndwi_path=base_prods / "lr_mndwi.tif",
         sr_mndwi_path=base_prods / "sr_mndwi.tif",
         lr_det_path=base_prods / "lr_detections.tif",
@@ -49,4 +55,8 @@ if __name__ == "__main__":
     csv_path = Path("metrics/flood_metrics.csv")
     write_metrics_csv(csv_path, m, spectral_name="MNDWI")
     print(f"CSV saved to {csv_path}")
+
+    plot_path = Path("metrics/graphs/mndwi_separation.png")
+    plot_distribution_separation(samples, m, spectral_name="MNDWI", output_path=plot_path)
+    print(f"Distribution separation plot saved to {plot_path}")
 
