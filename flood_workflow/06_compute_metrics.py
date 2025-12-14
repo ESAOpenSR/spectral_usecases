@@ -1,8 +1,9 @@
 import sys
+import os
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-REPO_ROOT = BASE_DIR.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = BASE_DIR
 DATA_DIR = BASE_DIR / "data_flood"
 RASTER_DIR = DATA_DIR / "raster_data"
 PRODUCTS_DIR = DATA_DIR / "products"

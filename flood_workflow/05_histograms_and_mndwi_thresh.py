@@ -7,7 +7,7 @@ import rasterio
 from rasterio.enums import Resampling
 from rasterio.warp import reproject
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data_flood"
 PRODUCTS_DIR = DATA_DIR / "products"
 

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import geopandas as gpd
@@ -5,7 +6,7 @@ import numpy as np
 import rasterio
 from rasterio import features
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data_fire"
 RASTER_DIR = DATA_DIR / "raster_data"
 VECTOR_DIR = DATA_DIR / "vector_data"

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import cubo
@@ -15,7 +16,7 @@ assert device.type == "cuda", "LDSR-S2 can only run on GPU."
 
 # @title
 # Export to Disk
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data_flood"
 RASTER_DIR = DATA_DIR / "raster_data"
 
