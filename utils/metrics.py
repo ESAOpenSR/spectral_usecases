@@ -10,7 +10,7 @@ import numpy as np
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.warp import reproject
-from scipy.ndimage import binary_dilation, binary_erosion
+from scipy.ndimage import binary_dilation, binary_erosion, sobel
 
 
 @dataclass
@@ -59,6 +59,9 @@ class DetectionMetrics:
     p2a_LR: float
     p2a_SR: float
     p2a_rel_change: float
+    boundary_grad_LR: float
+    boundary_grad_SR: float
+    boundary_grad_rel_change: float
     confusion_LR: ConfusionMetrics
     confusion_SR: ConfusionMetrics
 
@@ -76,6 +79,9 @@ class DetectionMetrics:
             "p2a_LR": self.p2a_LR,
             "p2a_SR": self.p2a_SR,
             "p2a_rel_change": self.p2a_rel_change,
+            "boundary_grad_LR": self.boundary_grad_LR,
+            "boundary_grad_SR": self.boundary_grad_SR,
+            "boundary_grad_rel_change": self.boundary_grad_rel_change,
             "confusion_LR": self.confusion_LR.as_dict(),
             "confusion_SR": self.confusion_SR.as_dict(),
         }
@@ -119,6 +125,31 @@ def _perimeter_to_area_ratio(mask: np.ndarray, transform) -> float:
     perimeter += mask_bool[:, -1].sum(dtype=np.int64) * pixel_width
 
     return perimeter / area
+
+
+def _mean_boundary_gradient(signal: np.ndarray, mask: np.ndarray, transform) -> float:
+    """Mean gradient magnitude of the signal sampled along the mask boundary."""
+
+    if signal.shape != mask.shape:
+        raise ValueError("Signal and mask must share the same grid for boundary gradient")
+
+    mask_bool = mask.astype(np.bool_)
+    if not np.any(mask_bool):
+        return np.nan
+
+    se = np.ones((3, 3))
+    boundary = np.logical_xor(binary_dilation(mask_bool, structure=se), binary_erosion(mask_bool, structure=se))
+
+    pixel_width, pixel_height = _pixel_size(transform)
+    grad_x = sobel(signal, axis=1) / (8.0 * pixel_width)
+    grad_y = sobel(signal, axis=0) / (8.0 * pixel_height)
+    grad_mag = np.hypot(grad_x, grad_y)
+    grad_mag[~np.isfinite(signal)] = np.nan
+
+    if not np.any(boundary):
+        return np.nan
+
+    return float(np.nanmean(grad_mag[boundary]))
 
 
 def _reproject_mask_to_target(mask_arr, src_transform, src_crs, dst_shape, dst_transform, dst_crs):
@@ -320,6 +351,10 @@ def compute_detection_metrics(
     p2a_SR = _perimeter_to_area_ratio(det_SR, sr_det_src.transform)
     p2a_rel_change = (p2a_SR - p2a_LR) / max(p2a_LR, 1e-9)
 
+    boundary_grad_LR = _mean_boundary_gradient(lr_signal, det_LR, lr_signal_src.transform)
+    boundary_grad_SR = _mean_boundary_gradient(sr_signal, det_SR_signal_grid, sr_signal_src.transform)
+    boundary_grad_rel_change = (boundary_grad_SR - boundary_grad_LR) / max(boundary_grad_LR, 1e-9)
+
     median_LR = np.nanmedian(lr_signal[gt_lr_signal == 1])
     median_SR = np.nanmedian(sr_signal[gt_sr_signal == 1])
 
@@ -361,6 +396,9 @@ def compute_detection_metrics(
         p2a_LR=p2a_LR,
         p2a_SR=p2a_SR,
         p2a_rel_change=p2a_rel_change,
+        boundary_grad_LR=boundary_grad_LR,
+        boundary_grad_SR=boundary_grad_SR,
+        boundary_grad_rel_change=boundary_grad_rel_change,
         confusion_LR=confusion_LR,
         confusion_SR=confusion_SR,
     )
@@ -401,6 +439,12 @@ def print_pretty_table(metrics: DetectionMetrics, title: str, spectral_name: str
         f"{metrics.p2a_SR:>15.6f} "
         f"{metrics.p2a_rel_change*100:>14.2f}%"
     )
+    print(
+        f"{'Boundary Grad. Magnitude':<25} "
+        f"{metrics.boundary_grad_LR:>15.6f} "
+        f"{metrics.boundary_grad_SR:>15.6f} "
+        f"{metrics.boundary_grad_rel_change*100:>14.2f}%"
+    )
 
     print("\n================================================\n")
 
@@ -417,6 +461,14 @@ def write_metrics_csv(csv_path: Path, metrics: DetectionMetrics, spectral_name: 
         writer.writerow(["High-Conf Fraction", metrics.high_LR, metrics.high_SR, metrics.high_rel_change])
         writer.writerow(["Edge-Region Gain", "", "", metrics.edge_gain])
         writer.writerow(["Perimeter/Area (P2A)", metrics.p2a_LR, metrics.p2a_SR, metrics.p2a_rel_change])
+        writer.writerow(
+            [
+                "Boundary Grad. Magnitude",
+                metrics.boundary_grad_LR,
+                metrics.boundary_grad_SR,
+                metrics.boundary_grad_rel_change,
+            ]
+        )
 
         writer.writerow(["True Positives", metrics.confusion_LR.tp, metrics.confusion_SR.tp, ""])
         writer.writerow(["True Negatives", metrics.confusion_LR.tn, metrics.confusion_SR.tn, ""])
