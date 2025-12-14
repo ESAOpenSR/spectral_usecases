@@ -56,6 +56,9 @@ class DetectionMetrics:
     high_SR: float
     high_rel_change: float
     edge_gain: float
+    p2a_LR: float
+    p2a_SR: float
+    p2a_rel_change: float
     confusion_LR: ConfusionMetrics
     confusion_SR: ConfusionMetrics
 
@@ -70,9 +73,52 @@ class DetectionMetrics:
             "high_SR": self.high_SR,
             "high_rel_change": self.high_rel_change,
             "edge_gain": self.edge_gain,
+            "p2a_LR": self.p2a_LR,
+            "p2a_SR": self.p2a_SR,
+            "p2a_rel_change": self.p2a_rel_change,
             "confusion_LR": self.confusion_LR.as_dict(),
             "confusion_SR": self.confusion_SR.as_dict(),
         }
+
+
+def _pixel_size(transform):
+    """Return (pixel_width, pixel_height) from an affine transform."""
+
+    pixel_width = abs(transform.a)
+    pixel_height = abs(transform.e)
+    return pixel_width, pixel_height
+
+
+def _perimeter_to_area_ratio(mask: np.ndarray, transform) -> float:
+    """
+    Compute perimeter-to-area ratio for a binary mask.
+
+    Perimeter is derived from horizontal/vertical edge transitions and outer
+    borders, scaled by the pixel spacing. Area uses the pixel area from the
+    geotransform. Returns NaN when area is zero.
+    """
+
+    mask_bool = mask.astype(np.bool_)
+    pixel_width, pixel_height = _pixel_size(transform)
+
+    area = mask_bool.sum(dtype=np.int64) * (pixel_width * pixel_height)
+    if area == 0:
+        return np.nan
+
+    # Internal boundaries (between 0/1) contribute perimeter equal to the
+    # dimension orthogonal to the transition.
+    horizontal_transitions = np.abs(mask_bool[:, 1:] - mask_bool[:, :-1]).sum(dtype=np.int64)
+    vertical_transitions = np.abs(mask_bool[1:, :] - mask_bool[:-1, :]).sum(dtype=np.int64)
+
+    perimeter = (horizontal_transitions * pixel_height) + (vertical_transitions * pixel_width)
+
+    # Outer borders where the mask touches the raster edge also contribute.
+    perimeter += mask_bool[0, :].sum(dtype=np.int64) * pixel_height
+    perimeter += mask_bool[-1, :].sum(dtype=np.int64) * pixel_height
+    perimeter += mask_bool[:, 0].sum(dtype=np.int64) * pixel_width
+    perimeter += mask_bool[:, -1].sum(dtype=np.int64) * pixel_width
+
+    return perimeter / area
 
 
 def _reproject_mask_to_target(mask_arr, src_transform, src_crs, dst_shape, dst_transform, dst_crs):
@@ -270,6 +316,10 @@ def compute_detection_metrics(
     N_SR = int(np.nansum(det_SR.astype(np.int64)))
     rel_change = (float(N_SR) - float(N_LR)) / max(float(N_LR), 1.0)
 
+    p2a_LR = _perimeter_to_area_ratio(det_LR, lr_det_src.transform)
+    p2a_SR = _perimeter_to_area_ratio(det_SR, sr_det_src.transform)
+    p2a_rel_change = (p2a_SR - p2a_LR) / max(p2a_LR, 1e-9)
+
     median_LR = np.nanmedian(lr_signal[gt_lr_signal == 1])
     median_SR = np.nanmedian(sr_signal[gt_sr_signal == 1])
 
@@ -308,6 +358,9 @@ def compute_detection_metrics(
         high_SR=high_SR,
         high_rel_change=high_rel_change,
         edge_gain=edge_gain,
+        p2a_LR=p2a_LR,
+        p2a_SR=p2a_SR,
+        p2a_rel_change=p2a_rel_change,
         confusion_LR=confusion_LR,
         confusion_SR=confusion_SR,
     )
@@ -342,6 +395,12 @@ def print_pretty_table(metrics: DetectionMetrics, title: str, spectral_name: str
         f"{'--':>15} "
         f"{metrics.edge_gain*100:>14.2f}%"
     )
+    print(
+        f"{'Perimeter/Area (P2A)':<25} "
+        f"{metrics.p2a_LR:>15.6f} "
+        f"{metrics.p2a_SR:>15.6f} "
+        f"{metrics.p2a_rel_change*100:>14.2f}%"
+    )
 
     print("\n================================================\n")
 
@@ -357,6 +416,7 @@ def write_metrics_csv(csv_path: Path, metrics: DetectionMetrics, spectral_name: 
         writer.writerow([f"Median {spectral_name}", metrics.median_LR, metrics.median_SR, ""])
         writer.writerow(["High-Conf Fraction", metrics.high_LR, metrics.high_SR, metrics.high_rel_change])
         writer.writerow(["Edge-Region Gain", "", "", metrics.edge_gain])
+        writer.writerow(["Perimeter/Area (P2A)", metrics.p2a_LR, metrics.p2a_SR, metrics.p2a_rel_change])
 
         writer.writerow(["True Positives", metrics.confusion_LR.tp, metrics.confusion_SR.tp, ""])
         writer.writerow(["True Negatives", metrics.confusion_LR.tn, metrics.confusion_SR.tn, ""])
