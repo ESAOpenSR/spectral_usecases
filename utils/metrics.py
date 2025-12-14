@@ -10,7 +10,7 @@ import numpy as np
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.warp import reproject
-from scipy.ndimage import binary_dilation, binary_erosion
+from scipy.ndimage import binary_dilation, binary_erosion, sobel
 
 
 @dataclass
@@ -56,6 +56,8 @@ class DetectionMetrics:
     high_SR: float
     high_rel_change: float
     edge_gain: float
+    boundary_grad_LR: float
+    boundary_grad_SR: float
     p2a_LR: float
     p2a_SR: float
     p2a_rel_change: float
@@ -73,6 +75,8 @@ class DetectionMetrics:
             "high_SR": self.high_SR,
             "high_rel_change": self.high_rel_change,
             "edge_gain": self.edge_gain,
+            "boundary_grad_LR": self.boundary_grad_LR,
+            "boundary_grad_SR": self.boundary_grad_SR,
             "p2a_LR": self.p2a_LR,
             "p2a_SR": self.p2a_SR,
             "p2a_rel_change": self.p2a_rel_change,
@@ -119,6 +123,29 @@ def _perimeter_to_area_ratio(mask: np.ndarray, transform) -> float:
     perimeter += mask_bool[:, -1].sum(dtype=np.int64) * pixel_width
 
     return perimeter / area
+
+
+def _mean_boundary_gradient(signal: np.ndarray, mask: np.ndarray) -> float:
+    """Mean Sobel gradient magnitude of a signal sampled along mask boundaries."""
+
+    mask_bool = mask.astype(np.bool_)
+    if not mask_bool.any():
+        return np.nan
+
+    se = np.ones((3, 3))
+    dil = binary_dilation(mask_bool, structure=se)
+    ero = binary_erosion(mask_bool, structure=se)
+    boundary = dil ^ ero
+
+    grad_x = sobel(signal, axis=1, mode="nearest")
+    grad_y = sobel(signal, axis=0, mode="nearest")
+    grad_mag = np.hypot(grad_x, grad_y)
+
+    valid_boundary = boundary & ~np.isnan(signal)
+    if not valid_boundary.any():
+        return np.nan
+
+    return float(np.nanmean(grad_mag[valid_boundary]))
 
 
 def _reproject_mask_to_target(mask_arr, src_transform, src_crs, dst_shape, dst_transform, dst_crs):
@@ -309,6 +336,22 @@ def compute_detection_metrics(
         det_SR_signal_grid = det_SR.copy()
         det_LR_signal_grid = det_LR_sr.copy()
 
+    if (
+        lr_signal.shape != det_LR.shape
+        or lr_signal_src.transform != lr_det_src.transform
+        or lr_signal_src.crs != lr_det_src.crs
+    ):
+        det_LR_signal = _reproject_mask_to_target(
+            det_LR,
+            src_transform=lr_det_src.transform,
+            src_crs=lr_det_src.crs,
+            dst_shape=lr_signal.shape,
+            dst_transform=lr_signal_src.transform,
+            dst_crs=lr_signal_src.crs,
+        )
+    else:
+        det_LR_signal = det_LR.copy()
+
     lr_signal[lr_signal == lr_nod] = np.nan
     sr_signal[sr_signal == sr_nod] = np.nan
 
@@ -326,6 +369,9 @@ def compute_detection_metrics(
     high_LR = np.nanmean((lr_signal[gt_lr_signal == 1] >= high_thr).astype("float32"))
     high_SR = np.nanmean((sr_signal[gt_sr_signal == 1] >= high_thr).astype("float32"))
     high_rel_change = (high_SR - high_LR) / max(high_LR, 1e-9)
+
+    boundary_grad_LR = _mean_boundary_gradient(lr_signal, det_LR_signal)
+    boundary_grad_SR = _mean_boundary_gradient(sr_signal, det_SR_signal_grid)
 
     se = np.ones((5, 5))
     dil_sr = binary_dilation(gt_sr_signal, structure=se)
@@ -358,6 +404,8 @@ def compute_detection_metrics(
         high_SR=high_SR,
         high_rel_change=high_rel_change,
         edge_gain=edge_gain,
+        boundary_grad_LR=boundary_grad_LR,
+        boundary_grad_SR=boundary_grad_SR,
         p2a_LR=p2a_LR,
         p2a_SR=p2a_SR,
         p2a_rel_change=p2a_rel_change,
@@ -396,6 +444,12 @@ def print_pretty_table(metrics: DetectionMetrics, title: str, spectral_name: str
         f"{metrics.edge_gain*100:>14.2f}%"
     )
     print(
+        f"{f'Boundary Grad ({spectral_name})':<25} "
+        f"{metrics.boundary_grad_LR:>15.6f} "
+        f"{metrics.boundary_grad_SR:>15.6f} "
+        f"{'--':>15}"
+    )
+    print(
         f"{'Perimeter/Area (P2A)':<25} "
         f"{metrics.p2a_LR:>15.6f} "
         f"{metrics.p2a_SR:>15.6f} "
@@ -416,6 +470,7 @@ def write_metrics_csv(csv_path: Path, metrics: DetectionMetrics, spectral_name: 
         writer.writerow([f"Median {spectral_name}", metrics.median_LR, metrics.median_SR, ""])
         writer.writerow(["High-Conf Fraction", metrics.high_LR, metrics.high_SR, metrics.high_rel_change])
         writer.writerow(["Edge-Region Gain", "", "", metrics.edge_gain])
+        writer.writerow([f"Boundary Grad ({spectral_name})", metrics.boundary_grad_LR, metrics.boundary_grad_SR, ""])
         writer.writerow(["Perimeter/Area (P2A)", metrics.p2a_LR, metrics.p2a_SR, metrics.p2a_rel_change])
 
         writer.writerow(["True Positives", metrics.confusion_LR.tp, metrics.confusion_SR.tp, ""])
