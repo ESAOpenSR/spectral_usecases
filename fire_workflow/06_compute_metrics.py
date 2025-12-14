@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import os
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = "/data1/simon/GitHub/spectral_usecases/"
 BASE_DIR = REPO_ROOT
 DATA_DIR = os.path.join(BASE_DIR, "data_fire")
 RASTER_DIR = os.path.join(DATA_DIR, "raster_data")

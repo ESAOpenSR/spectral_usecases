@@ -2,11 +2,11 @@ import sys
 import os
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-REPO_ROOT = BASE_DIR
-DATA_DIR = BASE_DIR / "data_flood"
-RASTER_DIR = DATA_DIR / "raster_data"
-PRODUCTS_DIR = DATA_DIR / "products"
+
+REPO_ROOT = "/data1/simon/GitHub/spectral_usecases/"
+DATA_DIR = os.path.join(REPO_ROOT, "data_flood")
+RASTER_DIR = os.path.join(DATA_DIR, "raster_data")
+PRODUCTS_DIR = os.path.join(DATA_DIR, "products")
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.append(str(REPO_ROOT))
@@ -37,11 +37,11 @@ if __name__ == "__main__":
     base_data = RASTER_DIR
 
     m = compute_metrics(
-        lr_mndwi_path=base_prods / "lr_mndwi.tif",
-        sr_mndwi_path=base_prods / "sr_mndwi.tif",
-        lr_det_path=base_prods / "lr_detections.tif",
-        sr_det_path=base_prods / "sr_detections.tif",
-        gt_path=base_data / "flood_mask.tif",
+        lr_mndwi_path=os.path.join(base_prods, "lr_mndwi.tif"),
+        sr_mndwi_path=os.path.join(base_prods, "sr_mndwi.tif"),
+        lr_det_path=os.path.join(base_prods, "lr_detections.tif"),
+        sr_det_path=os.path.join(base_prods, "sr_detections.tif"),
+        gt_path=os.path.join(base_data, "flood_mask.tif"),
         high_thr=0.2,
     )
 
