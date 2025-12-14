@@ -56,6 +56,8 @@ class DetectionMetrics:
     high_SR: float
     high_rel_change: float
     edge_gain: float
+    grad_LR: float
+    grad_SR: float
     boundary_grad_LR: float
     boundary_grad_SR: float
     p2a_LR: float
@@ -75,6 +77,8 @@ class DetectionMetrics:
             "high_SR": self.high_SR,
             "high_rel_change": self.high_rel_change,
             "edge_gain": self.edge_gain,
+            "grad_LR": self.grad_LR,
+            "grad_SR": self.grad_SR,
             "boundary_grad_LR": self.boundary_grad_LR,
             "boundary_grad_SR": self.boundary_grad_SR,
             "p2a_LR": self.p2a_LR,
@@ -146,6 +150,24 @@ def _mean_boundary_gradient(signal: np.ndarray, mask: np.ndarray) -> float:
         return np.nan
 
     return float(np.nanmean(grad_mag[valid_boundary]))
+
+
+def _mean_gradient(signal: np.ndarray, mask: np.ndarray) -> float:
+    """Mean Sobel gradient magnitude of a signal sampled inside a mask."""
+
+    mask_bool = mask.astype(np.bool_)
+    if not mask_bool.any():
+        return np.nan
+
+    grad_x = sobel(signal, axis=1, mode="nearest")
+    grad_y = sobel(signal, axis=0, mode="nearest")
+    grad_mag = np.hypot(grad_x, grad_y)
+
+    valid_region = mask_bool & ~np.isnan(signal)
+    if not valid_region.any():
+        return np.nan
+
+    return float(np.nanmean(grad_mag[valid_region]))
 
 
 def _reproject_mask_to_target(mask_arr, src_transform, src_crs, dst_shape, dst_transform, dst_crs):
@@ -370,6 +392,9 @@ def compute_detection_metrics(
     high_SR = np.nanmean((sr_signal[gt_sr_signal == 1] >= high_thr).astype("float32"))
     high_rel_change = (high_SR - high_LR) / max(high_LR, 1e-9)
 
+    grad_LR = _mean_gradient(lr_signal, det_LR_signal)
+    grad_SR = _mean_gradient(sr_signal, det_SR_signal_grid)
+
     boundary_grad_LR = _mean_boundary_gradient(lr_signal, det_LR_signal)
     boundary_grad_SR = _mean_boundary_gradient(sr_signal, det_SR_signal_grid)
 
@@ -404,6 +429,8 @@ def compute_detection_metrics(
         high_SR=high_SR,
         high_rel_change=high_rel_change,
         edge_gain=edge_gain,
+        grad_LR=grad_LR,
+        grad_SR=grad_SR,
         boundary_grad_LR=boundary_grad_LR,
         boundary_grad_SR=boundary_grad_SR,
         p2a_LR=p2a_LR,
@@ -444,6 +471,12 @@ def print_pretty_table(metrics: DetectionMetrics, title: str, spectral_name: str
         f"{metrics.edge_gain*100:>14.2f}%"
     )
     print(
+        f"{f'Mean Grad ({spectral_name})':<25} "
+        f"{metrics.grad_LR:>15.6f} "
+        f"{metrics.grad_SR:>15.6f} "
+        f"{'--':>15}"
+    )
+    print(
         f"{f'Boundary Grad ({spectral_name})':<25} "
         f"{metrics.boundary_grad_LR:>15.6f} "
         f"{metrics.boundary_grad_SR:>15.6f} "
@@ -470,6 +503,7 @@ def write_metrics_csv(csv_path: Path, metrics: DetectionMetrics, spectral_name: 
         writer.writerow([f"Median {spectral_name}", metrics.median_LR, metrics.median_SR, ""])
         writer.writerow(["High-Conf Fraction", metrics.high_LR, metrics.high_SR, metrics.high_rel_change])
         writer.writerow(["Edge-Region Gain", "", "", metrics.edge_gain])
+        writer.writerow([f"Mean Grad ({spectral_name})", metrics.grad_LR, metrics.grad_SR, ""])
         writer.writerow([f"Boundary Grad ({spectral_name})", metrics.boundary_grad_LR, metrics.boundary_grad_SR, ""])
         writer.writerow(["Perimeter/Area (P2A)", metrics.p2a_LR, metrics.p2a_SR, metrics.p2a_rel_change])
 

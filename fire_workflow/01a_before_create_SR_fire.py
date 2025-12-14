@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import cubo
 import matplotlib.pyplot as plt
@@ -16,9 +15,9 @@ assert device.type == "cuda", "LDSR-S2 can only run on GPU."
 
 # @title
 # Export to Disk
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data_fire"
-RASTER_DIR = DATA_DIR / "raster_data"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "data_fire")
+RASTER_DIR = os.path.join(DATA_DIR, "raster_data")
 
 
 def save_tensor_as_geotiff(tensor, attrs, out_path, super_resolved=False, sr_factor=4):
@@ -188,12 +187,12 @@ plot_lr_sr(low_resolution,super_resolution)
 save_tensor_as_geotiff(
     low_resolution,
     da[IMAGE_INDEX].attrs,
-    out_path=RASTER_DIR / "lr_before.tif",
+    out_path=os.path.join(RASTER_DIR, "lr_before.tif"),
     super_resolved=False,
 )
 save_tensor_as_geotiff(
     super_resolution,
     da[IMAGE_INDEX].attrs,
-    out_path=RASTER_DIR / "sr_before.tif",
+    out_path=os.path.join(RASTER_DIR, "sr_before.tif"),
     super_resolved=True,
 )
