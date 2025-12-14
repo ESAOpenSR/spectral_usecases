@@ -7,10 +7,10 @@ import rasterio
 from rasterio.enums import Resampling
 from rasterio.warp import reproject
 
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data_fire"
-PRODUCTS_DIR = DATA_DIR / "products"
-
+BASE_DIR = os.path.abspath("/data1/simon/GitHub/spectral_usecases/")
+DATA_DIR = os.path.join(BASE_DIR, "data_fire")
+RASTER_DIR = os.path.join(DATA_DIR, "raster_data")
+PRODUCTS_DIR = os.path.join(DATA_DIR, "products")
 
 def load_valid_pixels(path, mask_path=None):
     """
@@ -175,12 +175,12 @@ def write_detections(
 if __name__ == "__main__":
     base = PRODUCTS_DIR
 
-    lr_dnbr = base / "lr_dnbr.tif"
-    sr_dnbr = base / "sr_dnbr.tif"
+    lr_dnbr = os.path.join(base, "lr_dnbr.tif")
+    sr_dnbr = os.path.join(base, "sr_dnbr.tif")
 
     # these can now be LR- or SR-based; they will be resampled as needed
-    lr_mask = base / "valid_land_mask.tif"
-    sr_mask = base / "valid_land_mask.tif"  # e.g. reuse LR mask for SR
+    lr_mask = os.path.join(base, "valid_land_mask.tif")
+    sr_mask = os.path.join(base, "valid_land_mask.tif")  # e.g. reuse LR mask for SR
 
     threshold = plot_dnbr_histograms_with_threshold(
         lr_path=lr_dnbr,
@@ -192,9 +192,9 @@ if __name__ == "__main__":
     # --- write detections using that threshold ---
     write_detections(
         lr_dnbr,
-        base / "lr_detections.tif",
+        os.path.join(base, "lr_detections.tif"),
         threshold,
         reference_path=sr_dnbr,  # upsample LR first so detection happens on SR grid
         resampling=Resampling.bilinear,  # explicit bilinear resampling for upsampling
     )
-    write_detections(sr_dnbr, base / "sr_detections.tif", threshold)
+    write_detections(sr_dnbr, os.path.join(base, "sr_detections.tif"), threshold)
