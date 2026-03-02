@@ -4,6 +4,7 @@
 
 
 # Spectral Use Case Validation - Flood 🌊 and Fire 🔥
+[![DOI](https://zenodo.org/badge/1108411850.svg)](https://doi.org/10.5281/zenodo.18841140)
 
 <p align="center">
   🌍 <strong><a href="https://usecases.opensr.eu">Explore the Interactive Maps</a></strong> 🛰️
