@@ -6,12 +6,15 @@
 # Spectral Use Case Validation - Flood 🌊 and Fire 🔥
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18841141.svg)](https://doi.org/10.5281/zenodo.18841141)
 
+This is the accompanying repository for the publication draft on spectral validation of Sentinel-2 super-resolution for flood-water detection and burn-scar mapping. It contains the reproducible workflows, generated metrics, and figure utilities used for the flood (MNDWI) and burn-scar (dNBR) use cases.
 
 <p align="center">
-  🌍 <strong><a href="https://usecases.opensr.eu">Explore the Interactive Maps</a></strong> 🛰️
-</p
+  <strong><a href="https://usecases.opensr.eu">Project webpage and online maps</a></strong>
+  ·
+  <strong><a href="https://usecases.opensr.eu/notebooks">Rendered notebooks</a></strong>
+</p>
 
-This repository supports the paper’s LR vs. SR spectral use case validation, comparing native Sentinel-2 imagery against physics-constrained latent diffusion SR outputs for water (flood) and burn-severity (fire) detection. It provides reproducible code, data download helpers, and links to the accompanying walkthroughs on the project site [usecases.opensr.eu](https://usecases.opensr.eu).
+The companion webpage hosts the interactive online maps and rendered walkthrough notebooks. The local workflow scripts in this repository reproduce the LR vs. SR spectral-index and binary-classification metrics reported in the paper.
 
 
 <p align="center">
@@ -69,3 +72,8 @@ python 06_compute_metrics.py             # evaluate detection metrics
 ## Notes
 - Both workflows assume GPU access for LDSR-S2 super-resolution (`torch.cuda.is_available()` must be true).
 - Replace paths or thresholds in the scripts as needed to test additional events or alternative SR baselines.
+
+## Citation
+A paper citation and BibTeX entry are coming soon. The associated manuscript is currently a publication draft; once the final citation is available, it will be added here.
+
+For now, please cite the archived repository DOI: [10.5281/zenodo.18841141](https://doi.org/10.5281/zenodo.18841141).
