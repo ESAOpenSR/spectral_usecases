@@ -12,6 +12,8 @@ This is the accompanying repository for the publication draft on spectral valida
   <strong><a href="https://usecases.opensr.eu">Project webpage and online maps</a></strong>
   ·
   <strong><a href="https://usecases.opensr.eu/notebooks">Rendered notebooks</a></strong>
+  ·
+  <strong><a href="https://doi.org/10.5281/zenodo.18841141">Zenodo archive</a></strong>
 </p>
 
 The companion webpage hosts the interactive online maps and rendered walkthrough notebooks. The local workflow scripts in this repository reproduce the LR vs. SR spectral-index and binary-classification metrics reported in the paper.
@@ -32,8 +34,8 @@ The steps below mirror the instructions shown in the notebooks; follow them once
 
 1. **Install dependencies**: create a virtual environment and install requirements.
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate
+   python -m venv sr-env
+   source sr-env/bin/activate
    pip install -r requirements.txt
    ```
 2. **Fetch data**: download the prepared Sentinel-2 stacks (native, interpolated, and SR products) with the helper script. It populates `data_fire/` and `data_flood/` under each workflow directory.
