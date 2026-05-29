@@ -236,6 +236,7 @@ def compute_detection_metrics(
     sr_det_path: Path,
     gt_path: Path,
     high_thr: float,
+    edge_valid_mask_path: Path | None = None,
 ) -> DetectionMetrics:
     """Compute shared flood/fire metrics on LR and SR datasets."""
 
@@ -406,6 +407,24 @@ def compute_detection_metrics(
     dil_sr = binary_dilation(gt_sr_signal, structure=se)
     ero_sr = binary_erosion(gt_sr_signal, structure=se)
     edge_sr = (dil_sr.astype("uint8") - ero_sr.astype("uint8")) == 1
+    if edge_valid_mask_path is not None:
+        with rasterio.open(edge_valid_mask_path) as edge_valid_src:
+            edge_valid_mask = edge_valid_src.read(1).astype("uint8")
+            if (
+                edge_valid_mask.shape != edge_sr.shape
+                or edge_valid_src.transform != sr_signal_src.transform
+                or edge_valid_src.crs != sr_signal_src.crs
+            ):
+                edge_valid_mask = _reproject_mask_to_target(
+                    edge_valid_mask,
+                    src_transform=edge_valid_src.transform,
+                    src_crs=edge_valid_src.crs,
+                    dst_shape=edge_sr.shape,
+                    dst_transform=sr_signal_src.transform,
+                    dst_crs=sr_signal_src.crs,
+                )
+
+        edge_sr &= edge_valid_mask == 1
 
     LR_edge_detected = np.nansum(det_LR_signal_grid[edge_sr])
     SR_edge_detected = np.nansum(det_SR_signal_grid[edge_sr])

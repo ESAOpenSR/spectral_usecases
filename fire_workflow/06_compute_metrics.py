@@ -24,6 +24,7 @@ def compute_metrics(
     sr_det_path,
     gt_path,
     high_thr=0.5,
+    edge_valid_mask_path=None,
 ):
     return compute_detection_metrics(
         lr_signal_path=lr_dnbr_path,
@@ -32,6 +33,7 @@ def compute_metrics(
         sr_det_path=sr_det_path,
         gt_path=gt_path,
         high_thr=high_thr,
+        edge_valid_mask_path=edge_valid_mask_path,
     )
 
 
@@ -45,6 +47,7 @@ if __name__ == "__main__":
         lr_det_path=base_prods / "lr_detections.tif",
         sr_det_path=base_prods / "sr_detections.tif",
         gt_path=base_data / "fire_mask.tif",
+        edge_valid_mask_path=base_prods / "valid_land_mask.tif",
         high_thr=0.5,
     )
 
