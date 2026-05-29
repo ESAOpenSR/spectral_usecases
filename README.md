@@ -10,13 +10,9 @@ This is the accompanying repository for the publication draft on spectral valida
 
 <p align="center">
   <strong><a href="https://usecases.opensr.eu">Project webpage and online maps</a></strong>
-  ·
-  <strong><a href="https://usecases.opensr.eu/notebooks">Rendered notebooks</a></strong>
-  ·
-  <strong><a href="https://doi.org/10.5281/zenodo.18841141">Zenodo archive</a></strong>
 </p>
 
-The companion webpage hosts the interactive online maps and rendered walkthrough notebooks. The local workflow scripts in this repository reproduce the LR vs. SR spectral-index and binary-classification metrics reported in the paper.
+The companion webpage hosts the interactive online maps. The local workflow scripts in this repository reproduce the LR vs. SR spectral-index and binary-classification metrics reported in the paper.
 
 
 <p align="center">
@@ -30,7 +26,7 @@ The companion webpage hosts the interactive online maps and rendered walkthrough
 
 
 ## Run the LR vs SR validations locally
-The steps below mirror the instructions shown in the notebooks; follow them once to enable both workflows.
+Follow these steps once to enable both workflows.
 
 1. **Install dependencies**: create a virtual environment and install requirements.
    ```bash
@@ -43,7 +39,6 @@ The steps below mirror the instructions shown in the notebooks; follow them once
    ./fetch_data.sh
    ```
    Update `ZIP_URL` in the script to point at your storage location if you host the archive elsewhere.
-3. **Open the walkthroughs**: the rendered notebooks are available on the project site at https://usecases.opensr.eu/notebooks; they reference the same commands below for local execution.
 
 ## Running the workflows
 The workflows are organized by hazard; each step is a numbered script. Run them from their directory after data download.
@@ -77,5 +72,3 @@ python 06_compute_metrics.py             # evaluate detection metrics
 
 ## Citation
 A paper citation and BibTeX entry are coming soon. The associated manuscript is currently a publication draft; once the final citation is available, it will be added here.
-
-For now, please cite the archived repository DOI: [10.5281/zenodo.18841141](https://doi.org/10.5281/zenodo.18841141).
