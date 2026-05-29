@@ -13,6 +13,11 @@ model/
 *.gpkg
 data_fire
 data_flood
+.venv
+data
+*.csv
+metrics/histograms/*
+metrics/graphs/*
 
 # images
 *.tif
