@@ -52,6 +52,8 @@ python 03_calc_mndwi.py                  # derive MNDWI index
 python 04_create_thresh_mask.py          # apply thresholds
 python 05_histograms_and_mndwi_thresh.py # explore histogram-based cuts
 python 06_compute_metrics.py             # evaluate detection metrics
+python 07_compute_spectral_metrics.py    # compute paper spectral-fidelity metrics
+python 08_compute_edge_metrics.py        # compute paper edge-region metrics
 ```
 
 ### Fire (Palisades 2025)
@@ -64,6 +66,8 @@ python 03_calc_dnbr.py                   # derive dNBR index
 python 04_create_thresh_mask.py          # apply thresholds
 python 05_histograms_and_dnbr_thresh.py  # explore histogram-based cuts
 python 06_compute_metrics.py             # evaluate detection metrics
+python 07_compute_spectral_metrics.py    # compute paper spectral-fidelity metrics
+python 08_compute_edge_metrics.py        # compute paper edge-region metrics
 ```
 
 ## Notes

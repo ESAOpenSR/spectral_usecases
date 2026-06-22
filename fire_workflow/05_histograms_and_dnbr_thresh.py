@@ -10,6 +10,7 @@ from rasterio.warp import reproject
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data_fire"
 PRODUCTS_DIR = DATA_DIR / "products"
+GRAPH_OUTPUTS_DIR = DATA_DIR / "graph_outputs"
 
 
 def load_valid_pixels(path, mask_path=None):
@@ -103,9 +104,9 @@ def plot_dnbr_histograms_with_threshold(lr_path, sr_path, lr_mask, sr_mask, bins
     plt.legend()
     plt.grid(True, alpha=0.3)
 
-    os.makedirs("metrics/graphs", exist_ok=True)
+    GRAPH_OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
     plt.tight_layout()
-    plt.savefig("metrics/graphs/dnbr_histograms.png")
+    plt.savefig(GRAPH_OUTPUTS_DIR / "dnbr_histograms.png")
     plt.close()
 
     print(f"Otsu threshold (LR+SR combined, masked): {thr:.6f}")

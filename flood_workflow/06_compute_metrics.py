@@ -6,6 +6,7 @@ REPO_ROOT = WORKFLOW_DIR.parent
 DATA_DIR = WORKFLOW_DIR / "data_flood"
 RASTER_DIR = DATA_DIR / "raster_data"
 PRODUCTS_DIR = DATA_DIR / "products"
+METRICS_DIR = DATA_DIR / "metrics"
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -50,6 +51,6 @@ if __name__ == "__main__":
 
     print_pretty_table(m, title="Flood Metrics", spectral_name="MNDWI")
 
-    csv_path = REPO_ROOT / "metrics" / "flood_metrics.csv"
+    csv_path = METRICS_DIR / "flood_metrics.csv"
     write_metrics_csv(csv_path, m, spectral_name="MNDWI")
     print(f"CSV saved to {csv_path}")

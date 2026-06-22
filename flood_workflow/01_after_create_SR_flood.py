@@ -18,6 +18,7 @@ assert device.type == "cuda", "LDSR-S2 can only run on GPU."
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data_flood"
 RASTER_DIR = DATA_DIR / "raster_data"
+GRAPH_OUTPUTS_DIR = DATA_DIR / "graph_outputs"
 
 
 def save_tensor_as_geotiff(tensor, attrs, out_path, super_resolved=False, sr_factor=4):
@@ -79,7 +80,8 @@ def plot_lr(low_resolution):
   ax[0].set_title('RGB - 10m')
   ax[1].imshow(torch.clamp(low_resolution[[9, 7, 5]]*2, 0, 1).permute(1,2,0).cpu())
   ax[1].set_title('SWIR/RE - 20m')
-  plt.savefig("metrics/flood/lr_image.png")
+  GRAPH_OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+  plt.savefig(GRAPH_OUTPUTS_DIR / "lr_image.png")
   plt.close()
 
 # @title
@@ -113,7 +115,8 @@ def plot_lr_sr(low_resolution,super_resolution):
   axes[1, 1].axis('off')
 
   plt.tight_layout()
-  plt.savefig("metrics/flood/lr_sr_comparison.png")
+  GRAPH_OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+  plt.savefig(GRAPH_OUTPUTS_DIR / "lr_sr_comparison.png")
 
 
 # Define Location and Date Range

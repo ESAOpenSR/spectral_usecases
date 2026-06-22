@@ -13,7 +13,10 @@ from scipy.ndimage import binary_dilation, binary_erosion, gaussian_filter1d
 
 
 ROOT = Path(__file__).resolve().parents[1]
-GRAPH_DIR = ROOT / "metrics" / "graphs"
+FLOOD_DATA_DIR = ROOT / "flood_workflow" / "data_flood"
+FIRE_DATA_DIR = ROOT / "fire_workflow" / "data_fire"
+FLOOD_GRAPH_DIR = FLOOD_DATA_DIR / "graph_outputs"
+FIRE_GRAPH_DIR = FIRE_DATA_DIR / "graph_outputs"
 HIST_DIR = ROOT / "metrics" / "histograms"
 
 LR_COLOR = "#1f77b4"
@@ -33,8 +36,8 @@ CASES = (
         "sr_path": ROOT / "flood_workflow" / "data_flood" / "products" / "sr_mndwi.tif",
         "gt_path": ROOT / "flood_workflow" / "data_flood" / "raster_data" / "flood_mask.tif",
         "valid_mask_path": None,
-        "overall_output": GRAPH_DIR / "mndwi_histograms.png",
-        "edge_output": HIST_DIR / "flood_edge_mndwi_histograms.png",
+        "overall_output": FLOOD_GRAPH_DIR / "mndwi_histograms.png",
+        "edge_output": FLOOD_GRAPH_DIR / "edge_mndwi_histograms.png",
     },
     {
         "name": "fire",
@@ -47,8 +50,8 @@ CASES = (
         "sr_path": ROOT / "fire_workflow" / "data_fire" / "products" / "sr_dnbr.tif",
         "gt_path": ROOT / "fire_workflow" / "data_fire" / "raster_data" / "fire_mask.tif",
         "valid_mask_path": ROOT / "fire_workflow" / "data_fire" / "products" / "valid_land_mask.tif",
-        "overall_output": GRAPH_DIR / "dnbr_histograms.png",
-        "edge_output": HIST_DIR / "fire_edge_dnbr_histograms.png",
+        "overall_output": FIRE_GRAPH_DIR / "dnbr_histograms.png",
+        "edge_output": FIRE_GRAPH_DIR / "edge_dnbr_histograms.png",
     },
 )
 

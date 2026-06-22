@@ -18,6 +18,12 @@ data
 *.csv
 metrics/histograms/*
 metrics/graphs/*
+instructions
+tests/
+metrics/spectral_validation/*
+metrics/edge_validation*
+metrics/other/burnscar_metrics.csv
+metrics/a4_examples
 
 # images
 *.tif
